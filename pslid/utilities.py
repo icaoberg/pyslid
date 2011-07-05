@@ -383,34 +383,3 @@ def hasProject( session, prid ):
        return False
    else:
        return True
-
-def hasTable( session, iid, set="slf34", field=True ):
-   #create query service
-   query = session.getQueryService()
-
-   #create and populate parameter
-   if field == True:
-       filename = 'iid' + str(iid) + '_feature' + set + '_field.h5';
-   else:
-       filename = 'iid' + str(iid) + '_feature' + set + '_roi.h5';
-
-   #create and populate parameters
-   params = omero.sys.ParametersI()
-   params.addLong( "iid", iid );
-   params.addString( "filename", filename );
-
-   #hql string query
-   string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
-  
-   #database query
-   result =  query.findAllByQuery(string, params)   
-
-   #get answer
-   answer = len(result)
-
-   if answer == 0:
-       return False
-   else:
-       return True
- 
-   
