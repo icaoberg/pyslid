@@ -230,15 +230,6 @@ def getProject( session, prid ):
         print "No project exists with the given prid"
         return []
 
-def getTable( session, iid, set="slf34", field=True ):
-    """
-    Returns a table from an image given a set name.
-    @param session
-    @param table id (tid)
-    @return project
-    """
-
-    return []
 
 def hasDataset( session, did ):
    """

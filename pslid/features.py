@@ -46,6 +46,7 @@ def calculate( session, iid, set="slf34", pixels=0, timeseries=0 ):
         
     #create gateway
     gateway = session.createGateway()
+
     #make pyslic image container
     img=pyslic.Image()
     img.label=iid
@@ -89,7 +90,7 @@ def calculate( session, iid, set="slf34", pixels=0, timeseries=0 ):
         values = []
         return [ids, features]
 
-def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrite=False, verbose=False ):
+def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrite=False ):
     """
     Creates a table from the features vector and links
     the table to image with the given image id (iid). If the feature array is
@@ -109,45 +110,27 @@ def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrit
     
     #check if image exist
     if not pslid.utilities.hasImage( session, iid ):
-        if verbose:
-            print "Image not found."
         return False
          
-    #check the length of feature ids and feature values
-    #if len( feature_ids ) != len( features ):
-    #    print "Length of feature ids and values must be the same or feature ids must be empty"
-    #    return False
-
     #check if there is already a feature table attached to the image
     if pslid.features.has( session, iid, set, field ):
-         if verbose:
-             print "Existing feature table."
          return False
 
     try:
-        if verbose:
-             print "Making columns."
         columns = []
         for i in range(len(features)):
            if not feature_ids:
               try:
                   #create columns and append headers
                   columns.append( omero.grid.DoubleColumn(str(i), str(i), []) );
-                  if verbose:
-                      print "Creating header [" + str(i) + "]"
               except:
-                  if verbose:
-                      print "Unable to add header to column at: [" + str(i) + + "]"
                   return False
            else:
                try:
                    #create columns and append headers
                    columns.append( omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
-                   if verbose:
-                        print "Creating header [" + str(feature_ids[i]) + "]"
                except:
-                   if verbose:
-                       print "Unable to add header to column at: [" + str(feature_ids[i]) + "]"
+                   return False
     except:
         answer = False
         return answer 
@@ -162,13 +145,9 @@ def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrit
     # link features table
     if field==True:
         #table for field features
-        if verbose: 
-            print "Making table"
         table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
     else:
         #table for cell level features (roi == regions of interest)
-        if verbose: 
-            print "Making table"
         table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
        
     #create annotation 
