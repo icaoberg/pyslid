@@ -60,52 +60,6 @@ def login( client, username, password ):
     #return session
     return session
     
-def exportImage2Tif( session, iid ):
-    """
-    Exports an image in the database to OME TIFF.
-    @param session
-    @param location
-    @param filename
-    @param iid
-    """
-    
-    f = None
-    exporter = session.createExporter() # Stateful!
-    try:
-        exporter.addImage( iid )
-        length = exporter.generateTiff()
-        read = 0
-        f = open("%s.ome.tif" % iid, "w")
-        while True:
-            buf = exporter.read(read, 1000000)
-            f.write(buf)
-            f.flush()
-            # Store to file locally here
-            if len(buf) < 1000000:
-                break
-            read += len(buf)
-    finally:
-        if f:
-            f.close()
-        exporter.close()
-               
-def exportPlanes2Tif( session, gateway, iid, slice, timepoint ):
-    """
-    Get an image from the OMERO database and saves a tif for 
-    each channel present.
-    @param session
-    @gateway
-    @image id (iid)
-    @z-slice (slice)
-    @time point (timepoint)
-    """
- 
-    channels = getNumberOfChannels( gateway, iid )
-
-    for channel in range(channels):
-        plane = getPlane( session, gateway, iid, slice, channel, timepoint );
-        mahotas.imsave( str(iid)+'-'+str(channel)+'.tif', plane )
-
 def getDataset( session, did ):
     """
     Returns a dataset with the given dataset id (did).
@@ -126,6 +80,14 @@ def getDataset( session, did ):
         return []
 
 def getFileID( session, iid, set, field=True ):
+   """
+   Returns the file ID of a feature table attached to an image.
+   @param session
+   @param iid
+   @param set
+   @param field
+   @return file id
+   """
 
    #check input parameters
    if not hasImage( session, iid ):
