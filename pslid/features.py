@@ -39,25 +39,11 @@ def calculate( session, iid, set="slf34", pixels=0, timeseries=0 ):
     @return feature ids and values
     """
     
-    """
     #check input arguments
     if not pslid.utilities.hasImage( session, iid ):
         print "Nonexistent image given iid"
         return []
         
-    if not isinstance( set, str ):
-        print "Input parameter set must be a string"
-        return []
-    
-    if not isinstance( pixels, int ) | pixels < 0:
-        print "Input parameter pixels must be nonnegative"
-        return []
-        
-    if not isinstance( timeseries, int ) | timeseries < 0:
-        print "Input parameter pixels must be nonnegative"
-        return []    
-    """
-
     #create gateway
     gateway = session.createGateway()
     #make pyslic image container
