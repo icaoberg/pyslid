@@ -1,10 +1,10 @@
 Metadata-Version: 1.0
-Name: pslid
-Version: 0.0
-Summary: UNKNOWN
-Home-page: UNKNOWN
-Author: UNKNOWN
-Author-email: UNKNOWN
-License: UNKNOWN
-Description: UNKNOWN
+Name: PSLID
+Version: 0.0.0
+Summary: 
+Home-page: http://murphylab.cbi.cmu.edu/
+Author: Murphy Lab
+Author-email: murphy@cmu.edu
+License: GPL
+Description: PSLID interface for OMERO
 Platform: UNKNOWN

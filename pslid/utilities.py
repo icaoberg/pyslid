@@ -59,7 +59,7 @@ def login( client, username, password ):
     
     #return session
     return session
-    
+
 def getDataset( session, did ):
     """
     Returns a dataset with the given dataset id (did).
@@ -80,14 +80,6 @@ def getDataset( session, did ):
         return []
 
 def getFileID( session, iid, set, field=True ):
-   """
-   Returns the file ID of a feature table attached to an image.
-   @param session
-   @param iid
-   @param set
-   @param field
-   @return file id
-   """
 
    #check input parameters
    if not hasImage( session, iid ):
@@ -229,7 +221,6 @@ def getProject( session, prid ):
     else:
         print "No project exists with the given prid"
         return []
-
 
 def hasDataset( session, did ):
    """
