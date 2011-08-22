@@ -59,7 +59,7 @@ def login( client, username, password ):
     
     #return session
     return session
-
+    
 def getDataset( session, did ):
     """
     Returns a dataset with the given dataset id (did).
@@ -79,6 +79,26 @@ def getDataset( session, did ):
         print "No dataset exists with the given dataset id (did)"
         return []
 
+def getDatasets( session ):
+    """
+    Returns all the datasets associated with this user.
+    @param session
+    @return datasets
+    """
+       
+    #create gateway
+    gateway = session.createGateway()
+
+    datasets =[];
+    projects=gateway.getProjects([],False)
+    for project in projects:
+        list = project.linkedDatasetList()
+        for dataset in list:
+            datasets.append(dataset)        
+  
+    gateway.close()
+    return datasets
+    
 def getFileID( session, iid, set, field=True ):
 
    #check input parameters
@@ -137,7 +157,7 @@ def getImage( session, iid ):
     else:
         print "No image exists with the given iid"
         return []
-        
+    
 def getListOfImages( session, did ):
     """
     Returns the list of images from the given
@@ -170,10 +190,9 @@ def getListOfImages( session, did ):
     else:
         print "No dataset with the give did"
         return []
-
-
+    
 def getPlane( session, iid, slice, channel, timepoint ):
-
+    
     #create gateway
     gateway = session.createGateway()
     
@@ -189,7 +208,7 @@ def getPlane( session, iid, slice, channel, timepoint ):
     
     #retrieve pixel object
     pixels = session.getPixelsService().retrievePixDescription(pid);
-   
+    
     #update pixel service to match the current pixel object
     rawPixelsStore.setPixelsId( pid, True )
     
@@ -222,146 +241,203 @@ def getProject( session, prid ):
         print "No project exists with the given prid"
         return []
 
+def getProjects( session ):
+    """
+    Returns all the projects associated with the current user.
+    @param session
+    @return projects
+    """
+    
+    #create gateway
+    gateway = session.createGateway()
+
+    try:
+        projects = gateway.getProjects( [], False )
+        return projects
+    except:
+        print "Couldn't retrieve projects"
+    
 def hasDataset( session, did ):
-   """
-   Determines if there is a dataset in the OMERO database with the given
-   dataset id (did).
-   @params session
-   @params dataset id (did)
-   @return true if dataset exists, false otherwise
-   """
+    """
+    Determines if there is a dataset in the OMERO database with the given dataset id (did).
+    @params session
+    @params dataset id (did)
+    @return true if dataset exists, false otherwise
+    """
 
-   #create query service
-   query = session.getQueryService()
-
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "did", did );
-
-   #hql string query
-   string = "select count(*) from Dataset d where d.id = :did";
-
-   #database query
-   result = query.projection( string, params )
-
-   #get answer
-   answer = result.pop().pop()._val
-   if answer == 0:
-       return False
-   else:
-       return True
-       
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "did", did );
+    
+    #hql string query
+    string = "select count(*) from Dataset d where d.id = :did";
+    
+    #database query
+    result = query.projection( string, params )
+    
+    #get answer
+    answer = result.pop().pop()._val
+    
+    if answer == 0:
+        return False
+    else:
+        return True
+    
 def hasFile( session, fid ):
-  """
-  Determines if there is a file annotation with file id (fid).
-  @params session 
-  @params file id (fid)
-  @return true if there is a file annotation with file id (fid), false otherwise
-  """
-
-  #create query service
-  query = session.getQueryService()
-
-  #create and populate parameter
-  params = omero.sys.ParametersI()
-  params.addLong( "fid", fid );
-
-  #hql string query
-  string = "select count(*) from OriginalFile f where f.id = :fid";
-
-  #database query
-  result = query.projection( string, params )
-
-  #get answer
-  answer = result.pop().pop()._val
-  if answer == 0:
-     return False
-  else:
-     return True
-
+    """
+    Determines if there is a file annotation with file id (fid).
+    @params session 
+    @params file id (fid)
+    @return true if there is a file annotation with file id (fid), false otherwise
+    """
+    
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "fid", fid );
+    
+    #hql string query
+    string = "select count(*) from OriginalFile f where f.id = :fid";
+    
+    #database query
+    result = query.projection( string, params )
+    
+    #get answer
+    answer = result.pop().pop()._val
+    
+    if answer == 0:
+        return False
+    else:
+        return True
+    
 def hasImage( session, iid ):
-   """
-   Determines if there is an image in the OMERO database with the given
-   image id (iid).
-   @params session
-   @params image id (iid)
-   @return true if image exists, false otherwise
-   """
-
-   #create query service
-   query = session.getQueryService()
-
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "iid", iid );
-
-   #hql string query
-   string = "select count(*) from Image i where i.id = :iid";
-
-   #database query
-   result = query.projection( string, params )
-
-   #get answer
-   answer = result.pop().pop()._val
-   if answer == 0:
-       return False
-   else:
-       return True
-       
+    """
+    Determines if there is an image in the OMERO database with the given
+    image id (iid).
+    @params session
+    @params image id (iid)
+    @return true if image exists, false otherwise
+    """
+    
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "iid", iid );
+    
+    #hql string query
+    string = "select count(*) from Image i where i.id = :iid";
+    
+    #database query
+    result = query.projection( string, params )
+    
+    #get answer
+    answer = result.pop().pop()._val
+    
+    if answer == 0:
+        return False
+    else:
+        return True
+    
 def hasPlane( session, pid ):
-   """
-   Determines if there is a plane in the OMERO database with the given
-   plane id (pid).
-   @params session
-   @params plane id (pid)
-   @return true if plane exists, false otherwise
-   """
-
-   #create query service
-   query = session.getQueryService()
-
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "pid", pid );
-
-   #hql string query
-   string = "select count(*) from Plane p where p.id = :pid";
-
-   #database query
-   result = query.projection( string, params )
-
-   #get answer
-   answer = result.pop().pop()._val
-   if answer == 0:
-       return False
-   else:
-       return True
-
+    """
+    Determines if there is a plane in the OMERO database with the given
+    plane id (pid).
+    @params session
+    @params plane id (pid)
+    @return true if plane exists, false otherwise
+    """
+    
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "pid", pid );
+    
+    #hql string query
+    string = "select count(*) from Plane p where p.id = :pid";
+    
+    #database query
+    result = query.projection( string, params )
+    
+    #get answer
+    answer = result.pop().pop()._val
+    
+    if answer == 0:
+        return False
+    else:
+        return True
+    
 def hasProject( session, prid ):
-   """
-   Determines if there is a project in the OMERO database with the given
-   project id (prid).
-   @params session
-   @params project id (prid)
-   @return true if project exists, false otherwise
-   """
-
-   #create query service
-   query = session.getQueryService()
-
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "prid", prid );
-
-   #hql string query
-   string = "select count(*) from Project p where p.id = :prid";
-
-   #database query 
-   result = query.projection( string, params )
-
-   #get answer
-   answer = result.pop().pop()._val
-   if answer == 0:
-       return False
-   else:
-       return True
+    """
+    Determines if there is a project in the OMERO database with the given
+    project id (prid).
+    @params session
+    @params project id (prid)
+    @return true if project exists, false otherwise
+    """
+    
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "prid", prid );
+    
+    #hql string query
+    string = "select count(*) from Project p where p.id = :prid";
+    
+    #database query 
+    result = query.projection( string, params )
+    
+    #get answer
+    answer = result.pop().pop()._val
+    
+    if answer == 0:
+        return False
+    else:
+        return True
+    
+def getFileAnnotationLinks( session, iid, filename ):
+    """
+    Returns a list of file annotation links of a given filename from a valid
+    image id (iid)
+    @param session
+    @param image id (iid)
+    @param filename
+    @return file annotation links list
+    """
+    
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    
+    try:
+        params.addLong( "iid", iid );
+    except TypeError:
+        print "iid must be of type long"
+    
+    try:
+        params.addString( "filename", filename );
+    except TypeError:
+        print "filename must be of type string"
+    
+    #hql string query
+    string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
+    
+    #database query
+    fas = query.findAllByQuery( string, params )  
+    
+    faids = []
+    for fa in fas:
+        faids.append( fa._id._val )
+    
+    return faids

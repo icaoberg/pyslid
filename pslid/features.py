@@ -27,6 +27,7 @@ send email to murphy@cmu.edu
 """
 
 import omero, pyslic, pslid.utilities
+import omero.callbacks
 
 def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
     """
@@ -54,6 +55,7 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         img=pyslic.Image()
         img.label=iid
         channels=['protein','dna']
+
         slice=0
         timepoint=0
 
@@ -153,27 +155,32 @@ def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrit
     
     #check if image exist
     if not pslid.utilities.hasImage( session, iid ):
+        print "Image not found"
         return False
          
     #check if there is already a feature table attached to the image
-    if pslid.features.has( session, iid, set, field ):
-         return False
+    if pslid.features.has( session, iid, set, field ) and not overwrite:
+        print "Feature table already found"
+        return False
 
+    if overwrite:
+        pslid.features.unlink( session, iid, set, field )
+    
     try:
         columns = []
         for i in range(len(features)):
-           if not feature_ids:
-              try:
-                  #create columns and append headers
-                  columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
-              except:
-                  return False
-           else:
-               try:
-                   #create columns and append headers
-                   columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
-               except:
-                   return False
+            if not feature_ids:
+                try:
+                    #create columns and append headers
+                    columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
+                except:
+                    return False
+            else:
+                try:
+                    #create columns and append headers
+                    columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
+                except:
+                    return False
     except:
         return False
      
@@ -247,8 +254,8 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
             features.append( value.values[0] )
         return [ids, features]
     elif calculate == True:
-	        [ids,features] = pslid.features.calculate( session, iid, set="slf34", pixels=0, timeseries=0 )
-		return [ids, features]
+        [ids,features] = pslid.features.calculate( session, iid, set="slf34", pixels=0, timeseries=0 )
+        return [ids, features]
     else:
         return []
 
@@ -280,53 +287,111 @@ def clink( session, iid, pixels=0, timeseries=0, set="slf34", field=True, rid=[]
     answer = pslid.features.link( session, iid, ids, features, set, field, rid, overwrite )
     return answer
     
-def unlink( session, iid, set, field=True, rid=[] ):
+def has( session, iid, set="slf34", field=True ):
     """
-    Unlinks a feature table from an image.
+    Returns true if the image has a feature table attached to it.
     @param session
     @param iid
     @param set
     @param field
-    @param rid
-    @return True if table was unlinked, False otherwise
-    """ 
+    @return True if there is an image attached to it, false otherwise
+    """
 
-    return False
+    #casting to string prevents unicode errors when using django
+    set = str(set)
     
-def has( session, iid, set="slf34", field=True ):
-   """
-   Returns true if the image has a feature table attached to it.
-   @param session
-   @param iid
-   @param set
-   @param field
-   @return True if there is an image attached to it, false otherwise
-   """
+    #create query service
+    query = session.getQueryService()
+    
+    #create and populate parameter
+    if field == True:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_field.h5';
+    else:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
+    
+    #casting to string prevents unicode errors when using django
+    filename = str(filename)      
+
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    
+    try:
+        params.addLong( "iid", iid );
+    except TypeError:
+        print "iid must be of type long"
+    
+    try:
+        params.addString( "filename", filename );
+    except TypeError:
+        print "filename must be of type string"
+    
+    #hql string query
+    string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
+    
+    #database query 
+    result = query.findAllByQuery( string, params )  
+    result = query.projection( string, params )
    
-   #create query service
-   query = session.getQueryService()
+    #get answer
+    answer = len(result)
+    if answer == 0:
+        return False
+    else:
+        return True
+    
+def unlink( session, iid, set="slf34", field=True ):
+    """
+    Unlinks and removes feature tables. If more than one feature table with the same 
+    name are found to be linked to the same image, this function removes them all.
+    @param session
+    @param iid
+    @param set
+    @param field
+    @return True if the table was removed, false otherwise
+    """
+    
+    #create query service
+    query = session.getQueryService()
 
-   #create and populate parameter
-   if field == True:
-       filename = 'iid-' + str(iid) + '_feature-' + set + '_field.h5';
-   else:
-       filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
+    #create and populate parameter
 
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "iid", iid );
-   params.addString( "filename", filename );
+    if field == True:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_field.h5';
+    else:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
 
-   #hql string query
-   string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
-  
-   #database query 
-   result =  query.findAllByQuery(string, params)  
-   result = query.projection( string, params )
-   
-   #get answer
-   answer = len(result)
-   if answer == 0:
-       return False
-   else:
-       return True
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( "iid", iid );
+    params.addString( "filename", filename );
+
+    #hql string query
+    string = "select iml from ImageAnnotationLink as iml join fetch iml.child as  fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
+    link = query.findByQuery(string, params)
+    annotation = link.child
+
+    #create delete service    
+    deleteService = session.getDeleteService()
+
+    #list of commands
+    commands = []
+    commands.append(omero.api.delete.DeleteCommand("/ImageAnnotationLink", link.id.val, None))
+    commands.append(omero.api.delete.DeleteCommand("/Annotation", annotation.id.val, None))
+
+    deleteHandlePrx = deleteService.queueDelete(commands)
+    callback = omero.callbacks.DeleteCallbackI(client, deleteHandlePrx)
+
+    try:
+        try:
+            cb.loop(10, 500)
+        except omero.LockTimeout:
+            print "Not finished in 5 seconds. Cancelling..."
+
+            if not deleteHandlePrx.cancel():
+                print "ERROR: Failed to cancel"
+
+            reports = deleteHandlePrx.report()
+            return reports
+
+    except:
+         print "Unable to unlink annotation"   
