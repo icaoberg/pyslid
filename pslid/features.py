@@ -229,7 +229,7 @@ def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrit
     table.close()
     return True
 
-def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, timeseries=0 ):
+def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, silce=0, timeseries=0 ):
     """
     Returns a features vector given an image id (iid)
     @param session
@@ -261,7 +261,7 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
             features.append( value.values[0] )
         return [ids, features]
     elif calculate == True:
-        [ids,features] = pslid.features.calculate( session, iid, set="slf34", pixels=0, timeseries=0 )
+        [ids,features] = pslid.features.calculate( session, iid, set="slf34", pixels, slice, timeseries )
         return [ids, features]
     else:
         return []
