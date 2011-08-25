@@ -44,7 +44,10 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
     #check input arguments
     if not pslid.utilities.hasImage( session, iid ):
         return []
-
+    else:
+        image = pslid.utilities.getImage(session, iid)
+        scale = image.getPixels(0).getPhysicalSizeX().getValue()        
+ 
     #create gateway
     gateway = session.createGateway()
 
@@ -54,6 +57,7 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         #make pyslic image container
         img=pyslic.Image()
         img.label=iid
+        img.scale=scale
         channels=['protein','dna']
 
         slice=0
