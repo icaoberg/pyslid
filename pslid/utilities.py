@@ -30,7 +30,7 @@ send email to murphy@cmu.edu
 import omero, pyslic
 import omero.util.script_utils as utils
 
-def connect( server, port ): 
+def connect( server, port, time=60 ): 
     """
     Helper method that connects to an OMEPSLID server.
     @params server
@@ -41,7 +41,7 @@ def connect( server, port ):
     #connects to the server
     client = omero.client( server, port )
     #keeps the connection alive
-    client.enableKeepAlive( 60 )
+    client.enableKeepAlive( time )
     #returns a client
     return client
     
@@ -59,7 +59,20 @@ def login( client, username, password ):
     
     #return session
     return session
+
+def close( client, session ):
+    """
+    Helper method that closes the client and session.
+    @param client
+    @param session
+    """
     
+    try:
+        session.close()
+        client.closeSession()
+    finally:
+        client.closeSession()
+
 def getDataset( session, did ):
     """
     Returns a dataset with the given dataset id (did).

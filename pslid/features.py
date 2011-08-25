@@ -274,18 +274,18 @@ def clink( session, iid, pixels=0, timeseries=0, set="slf34", field=True, rid=[]
     """
     
     if not pslid.utilities.hasImage( session, iid ):
-        if verbose:
-            print "Image not found."
         return False
-    
-    if pslid.features.has( session, iid, set, field ):
-        if verbose:
-            print "Existing feature table."
-        return False
-        
-    [ids, features] = pslid.features.calculate( session, iid, set, pixels, timeseries )
-    answer = pslid.features.link( session, iid, ids, features, set, field, rid, overwrite )
-    return answer
+            
+    try:
+        [ids, features] = pslid.features.calculate( session, iid, set, pixels, timeseries )
+    except:
+        "Couldn't calculate features"
+
+    try:
+        answer = pslid.features.link( session, iid, ids, features, set, field, rid, overwrite )
+        return answer
+    except:
+        "Couldn't attach feature table to image"
     
 def has( session, iid, set="slf34", field=True ):
     """
@@ -339,7 +339,7 @@ def has( session, iid, set="slf34", field=True ):
     else:
         return True
     
-def unlink( session, iid, set="slf34", field=True ):
+def unlink( client, session, iid, set="slf34", field=True ):
     """
     Unlinks and removes feature tables. If more than one feature table with the same 
     name are found to be linked to the same image, this function removes them all.
