@@ -46,7 +46,10 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         return []
     else:
         image = pslid.utilities.getImage(session, iid)
-        scale = image.getPixels(0).getPhysicalSizeX().getValue()        
+        try:
+            scale = image.getPixels(0).getPhysicalSizeX().getValue()        
+        except:
+            scale = None
  
     #create gateway
     gateway = session.createGateway()
