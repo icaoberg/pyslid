@@ -454,3 +454,18 @@ def getFileAnnotationLinks( session, iid, filename ):
         faids.append( fa._id._val )
     
     return faids
+
+def toFalcon( session, server_name, owner, weight=0, iid, set="slf34", field=True, rid=[], calculate=False ):
+    """
+    Helper method that exports the features table attached to an image to a format recognizable 
+    by the falcon package for python
+    """
+
+    try:
+        [ids, features] = pslid.features.get( session, iid, set, field, rid, calculate )
+    except:
+        "Could not retrieve features from server"
+	
+    #make key
+    key = ( str(iid), server_name, owner )
+    return ( key, weight, features )
