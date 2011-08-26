@@ -29,7 +29,7 @@ send email to murphy@cmu.edu
 import omero, pyslic, pslid.utilities
 import omero.callbacks
 
-def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, threshold=None ):
+def calculate( session, iid, set="slf34", field=True, rid=[], pixels=0, zslice=0, timepoint=0, threshold=None ):
     """
     Calculates and returns a feature ids and features vectors given a valid
     image identification (iid). It currently calculates SLF33, SLF34, SLF35 and SLF36.
@@ -37,7 +37,7 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
     @param image id (iid)
     @param set slf set id
     @param pixels
-    @param timeseries
+    @param timepoint
     @return feature ids and values
     """
    
@@ -45,15 +45,19 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
     if not pslid.utilities.hasImage( session, iid ):
         return []
     else:
+        #get image information from omero
         image = pslid.utilities.getImage(session, iid)
         try:
+            #check if image size is greater than threshold value
             if img.getPixels(pixels).getSizeX().getValue() > threshold:
                 return [[],[]]
             elif img.getPixels(pixels).getSizeY().getValue() > threshold:
                 return [[],[]]
             else:
+                #set scale value
                 scale = image.getPixels(pixels).getPhysicalSizeX().getValue()        
         except:
+            #if no scale value is present, pyslic will set a scale value of .23
             scale = None
  
     #create gateway
@@ -67,9 +71,6 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
         img.label=iid
         img.scale=scale
         channels=['protein','dna']
-
-        zslice=0
-        timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
@@ -88,8 +89,6 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
         img.scale=scale
 
         channels=['protein']
-        zslice=0
-        timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
@@ -107,8 +106,6 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
         img.scale=scale
 
         channels=['protein','dna']
-        zslice=0
-        timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
@@ -131,8 +128,6 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
         img.scale=scale
 
         channels=['protein','dna']
-        zslice=0
-        timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
@@ -153,8 +148,7 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, thres
         values = []
         return [ids, features]
 
-def link( session, iid, feature_ids, features, set, 
-field=True, rid=[], overwrite=False ):
+def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrite=False ):
     """
     Creates a table from the features vector and links
     the table to image with the given image id (iid). If the feature array is
@@ -211,13 +205,16 @@ field=True, rid=[], overwrite=False ):
     flink = omero.model.ImageAnnotationLinkI()
     
     # link features table
-    if field==True:
-        #table for field features
-        table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
-    else:
-        #table for cell level features (roi == regions of interest)
-        table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
-       
+    try:
+        if field==True:
+            #table for field features
+            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
+        else:
+            #table for cell level features (roi == regions of interest)
+            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
+    except:
+        return False    
+   
     #create annotation 
     annotation = omero.model.FileAnnotationI()
     #link table to annotation object
@@ -241,7 +238,7 @@ field=True, rid=[], overwrite=False ):
     table.close()
     return True
 
-def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, zslice=0, timeseries=0 ):
+def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, zslice=0, timepoint=0 ):
     """
     Returns a features vector given an image id (iid)
     @param session
@@ -274,30 +271,32 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
             features.append( value.values[0] )
         return [ids, features]
     elif calculate:
-        [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timeseries )
+        [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timepoint )
         return [ids, features]
     else:
         return [[],[]]
 
-def clink( session, iid, pixels=0, timeseries=0, set="slf34", field=True, rid=[], overwrite=False, verbose=False ):
+def clink( client, session, iid, pixels=0, timepoint=0, set="slf34", field=True, rid=[], threshold=None, overwrite=False ):
     """
     Calculates and links features to an object type given a valid id for the object.
     @param session
     @param type The object type. Can be Image, Dataset or Object
     @param id a valid object id
     @param pixels
-    @param timeseries
+    @param timepoint
     @param set a valid feature set id
     @param field True if these are field features, False otherwise
     @param rid region of interest id
+    @param thresold a threshold value that prevents feature calculation if image is too big
     @param overwrite False if you dont wish to overwrite the feature table, True otherwise
+    @return true if table is linked, false otherwise
     """
     
     if not pslid.utilities.hasImage( session, iid ):
         return False
             
     try:
-        [ids, features] = pslid.features.calculate( session, iid, set, pixels, timeseries )
+        [ids, features] = pslid.features.calculate( session, iid, set, pixels, zslice, timepoint, threshold )
     except:
         "Couldn't calculate features"
 
