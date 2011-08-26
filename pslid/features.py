@@ -29,7 +29,7 @@ send email to murphy@cmu.edu
 import omero, pyslic, pslid.utilities
 import omero.callbacks
 
-def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0 ):
+def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0, threshold=None ):
     """
     Calculates and returns a feature ids and features vectors given a valid
     image identification (iid). It currently calculates SLF33, SLF34, SLF35 and SLF36.
@@ -47,7 +47,12 @@ def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0 ):
     else:
         image = pslid.utilities.getImage(session, iid)
         try:
-            scale = image.getPixels(0).getPhysicalSizeX().getValue()        
+            if img.getPixels(pixels).getSizeX().getValue() > threshold:
+                return [[],[]]
+            elif img.getPixels(pixels).getSizeY().getValue() > threshold:
+                return [[],[]]
+            else:
+                scale = image.getPixels(pixels).getPhysicalSizeX().getValue()        
         except:
             scale = None
  
