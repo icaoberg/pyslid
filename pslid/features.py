@@ -29,7 +29,7 @@ send email to murphy@cmu.edu
 import omero, pyslic, pslid.utilities
 import omero.callbacks
 
-def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
+def calculate( session, iid, set="slf34", pixels=0, zslice=0, timepoint=0 ):
     """
     Calculates and returns a feature ids and features vectors given a valid
     image identification (iid). It currently calculates SLF33, SLF34, SLF35 and SLF36.
@@ -63,13 +63,13 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         img.scale=scale
         channels=['protein','dna']
 
-        slice=0
+        zslice=0
         timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
             img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,slice,channel_num,timepoint)
+            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
         
         img.loaded=True
         features = []    
@@ -80,14 +80,16 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         #make pyslic image container
         img=pyslic.Image()
         img.label=iid
+        img.scale=scale
+
         channels=['protein']
-        slice=0
+        zslice=0
         timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
             img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,slice,channel_num,timepoint)
+            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
         img.loaded=True
         features = []    
 
@@ -97,14 +99,16 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         #make pyslic image container
         img=pyslic.Image()
         img.label=iid
+        img.scale=scale
+
         channels=['protein','dna']
-        slice=0
+        zslice=0
         timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
             img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,slice,channel_num,timepoint)
+            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
         img.loaded=True
         ids = []
         features = []
@@ -119,14 +123,16 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         #make pyslic image container
         img=pyslic.Image()
         img.label=iid
+        img.scale=scale
+
         channels=['protein','dna']
-        slice=0
+        zslice=0
         timepoint=0
 
         for c in channels:
             channel_num=channels.index(c)
             img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,slice,channel_num,timepoint)
+            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
         img.loaded=True
         ids = []
         features = []
@@ -142,7 +148,8 @@ def calculate( session, iid, set="slf34", pixels=0, slice=0, timepoint=0 ):
         values = []
         return [ids, features]
 
-def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrite=False ):
+def link( session, iid, feature_ids, features, set, 
+field=True, rid=[], overwrite=False ):
     """
     Creates a table from the features vector and links
     the table to image with the given image id (iid). If the feature array is
@@ -229,7 +236,7 @@ def link( session, iid, feature_ids, features, set, field=True, rid=[], overwrit
     table.close()
     return True
 
-def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, silce=0, timeseries=0 ):
+def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, zslice=0, timeseries=0 ):
     """
     Returns a features vector given an image id (iid)
     @param session
@@ -245,11 +252,12 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
         filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
     
     #determine if there is only one table
-    if pslid.features.has( session, iid, set, field ):
+    if pslid.features.has( session, iid, set, field ):        
         fid = pslid.utilities.getFileID( session, iid, set, field )
         resources = session.sharedResources()
-        table = resources.openTable( omero.model.OriginalFileI( fid, False ) )
+        table = resources.openTable( omero.model.OriginalFileI( fid, False ))
         values = table.read( range(len(table.getHeaders())), 0L, table.getNumberOfRows() );
+
         #converts a Data type to a python list
         values = values.columns
 
@@ -260,11 +268,11 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
             ids.append( value.name )
             features.append( value.values[0] )
         return [ids, features]
-    elif calculate == True:
-        [ids,features] = pslid.features.calculate( session, iid, set="slf34", pixels, slice, timeseries )
+    elif calculate:
+        [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timeseries )
         return [ids, features]
     else:
-        return []
+        return [[],[]]
 
 def clink( session, iid, pixels=0, timeseries=0, set="slf34", field=True, rid=[], overwrite=False, verbose=False ):
     """
