@@ -274,6 +274,7 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
         for value in values:
             ids.append( value.name )
             features.append( value.values[0] )
+        table.close()
         return [ids, features]
     elif calculate:
         [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timepoint )
@@ -392,7 +393,10 @@ def unlink( client, session, iid, set="slf34", field=True, rid=None ):
     #hql string query
     string = "select iml from ImageAnnotationLink as iml join fetch iml.child as  fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
     link = query.findByQuery(string, params)
-    annotation = link.child
+    try:
+        annotation = link.child
+    except:
+        return False
 
     #create delete service    
     deleteService = session.getDeleteService()
@@ -408,6 +412,7 @@ def unlink( client, session, iid, set="slf34", field=True, rid=None ):
     try:
         try:
             callback.loop(10, 500)
+            return True
         except omero.LockTimeout:
             print "Not finished in 5 seconds. Cancelling..."
 
@@ -415,7 +420,6 @@ def unlink( client, session, iid, set="slf34", field=True, rid=None ):
                 print "ERROR: Failed to cancel"
 
             reports = deleteHandlePrx.report()
-            return reports
-
+            return False
     except:
-         print "Unable to unlink annotation"   
+        return False
