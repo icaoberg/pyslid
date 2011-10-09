@@ -84,7 +84,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         features = []    
 
         features = pyslic.computefeatures(img,'field-dna+')
-        return [ids[0:173], features]
+        return [feature_ids[0:173], features]
     elif set=="slf33":
         #make pyslic image container
         img=pyslic.Image()

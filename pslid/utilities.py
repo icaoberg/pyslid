@@ -29,6 +29,7 @@ send email to murphy@cmu.edu
 
 import omero, pyslic
 import omero.util.script_utils as utils
+from omero.rtypes import *
 
 def connect( server, port, time=60 ): 
     """
@@ -455,3 +456,53 @@ def getFileAnnotationLinks( session, iid, filename ):
     
     return faids
 
+def createDataset( session, name ):
+    """
+    Creates a dataset with the given name and returns the dataset id for that dataset.
+    @param session
+    @param name 
+    @return dataset id
+    """
+
+    gateway = session.createGateway()
+    dataset = omero.model.DatasetI()
+    dataset.name = omero.rtypes.rstring( name )
+
+    try:
+       dataset = gateway.saveAndReturnObject( dataset )
+    except:
+       gateway.close()
+       return []
+    
+    gateway.close()
+    return dataset._id._val
+
+def addImage2Dataset( session, iid, did ):
+    """
+    Add an existing image to an existing dataset
+    @param session
+    @param iid
+    @param did
+    @return true if image is added, false otherwise
+    """
+    
+    if not hasImage( session, iid ):
+        print "No image exists with the given iid"
+        return False
+
+    if not hasDataset( session, did ):
+        print "No image exists with the given iid"
+        return False    
+
+    gateway = session.createGateway()
+    link = omero.model.DatasetImageLinkI()
+    link.parent = omero.model.DatasetI(did, False)
+    link.child = omero.model.ImageI(iid, False)
+ 
+    try:
+       gateway.saveAndReturnObject(link)
+    except:
+       gateway.close()
+       return False
+    
+    return True
