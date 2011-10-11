@@ -29,7 +29,7 @@ send email to murphy@cmu.edu
 import omero, pyslic, pslid.utilities
 import omero.callbacks
 
-def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice=0, timepoint=0, threshold=None ):
+def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channels=[], zslice=0, timepoint=0, threshold=None ):
     """
     Calculates and returns a feature ids and features vectors given a valid
     image identification (iid). It currently calculates SLF33, SLF34, SLF35 and SLF36.
@@ -48,6 +48,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         #get image information from omero
         image = pslid.utilities.getImage(session, iid)
         try:
+            #if threshold is empty use default value
             if threshold == None:
                 threshold = 10*1024;
 
@@ -73,15 +74,15 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         img=pyslic.Image()
         img.label=iid
         img.scale=scale
-        channels=['protein','dna']
+        if len(channels) != 2:
+            channels = [ 0, 1 ]
 
-        for c in channels:
-            channel_num=channels.index(c)
-            img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
+        for channel in channels:
+            img.channels[ len(img.channels) ] = channel
+            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,pixels,channel,zslice,timepoint)
         
         img.loaded=True
-        features = []    
+        features = []
 
         features = pyslic.computefeatures(img,'field-dna+')
         return [feature_ids[0:173], features]
@@ -91,12 +92,13 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         img.label=iid
         img.scale=scale
 
-        channels=['protein']
+        if len(channels) != 1:
+            channels = [0]
 
-        for c in channels:
-            channel_num=channels.index(c)
-            img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
+        for channel in channels:
+            img.channels[ len(img.channels) ] = channel
+            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+
         img.loaded=True
         ids = []
         features = []    
@@ -112,12 +114,13 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         img.label=iid
         img.scale=scale
 
-        channels=['protein','dna']
+        if len(channels) != 2:
+           channels = [ 0, 1 ]
 
-        for c in channels:
-            channel_num=channels.index(c)
-            img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
+        for channel in channels:
+            img.channels[ len(img.channels) ] = channel
+            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+
         img.loaded=True
         ids = []
         features = []
@@ -134,12 +137,13 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, zslice
         img.label=iid
         img.scale=scale
 
-        channels=['protein','dna']
+        if len(channels) != 2:
+            channels = [0, 1]
 
-        for c in channels:
-            channel_num=channels.index(c)
-            img.channels[c]=channel_num
-            img.channeldata[c]=pslid.utilities.getPlane(session,iid,zslice,channel_num,timepoint)
+        for channel in channels:
+            img.channels[ len(img.channels) ] = channel
+            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+
         img.loaded=True
         ids = []
         features = []

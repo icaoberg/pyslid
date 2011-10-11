@@ -205,7 +205,7 @@ def getListOfImages( session, did ):
         print "No dataset with the give did"
         return []
     
-def getPlane( session, iid, slice, channel, timepoint ):
+def getPlane( session, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
     
     #create gateway
     gateway = session.createGateway()
@@ -218,7 +218,7 @@ def getPlane( session, iid, slice, channel, timepoint ):
     
     #get plane id from image (we use zero because our images have only 
     #one pixel object per image object
-    pid = image.getPixels( 0 ).getId().getValue();
+    pid = image.getPixels( pixels ).getId().getValue();
     
     #retrieve pixel object
     pixels = session.getPixelsService().retrievePixDescription(pid);
@@ -226,9 +226,12 @@ def getPlane( session, iid, slice, channel, timepoint ):
     #update pixel service to match the current pixel object
     rawPixelsStore.setPixelsId( pid, True )
     
-    #extract pixel object
-    plane = utils.downloadPlane( rawPixelsStore, pixels, slice, channel, timepoint );
-    
+    try:
+        #extract pixel object
+        plane = utils.downloadPlane( rawPixelsStore, pixels, zslice, channel, timepoint );
+    except:
+        return []    
+
     #close services
     gateway.close()
     rawPixelsStore.close()
@@ -252,6 +255,7 @@ def getProject( session, prid ):
         gateway.close()
         return project
     else:
+        gateway.close()
         print "No project exists with the given prid"
         return []
 
