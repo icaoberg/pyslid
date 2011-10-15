@@ -132,12 +132,15 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         ids = []
         features = []
 
-        values = pyslic.computefeatures(img,'field-dna+')
-        indices = [12,10,11,1,18,17,6,7,8,9,20,2,3,19,4,5,21,22,13,14,15,16]
-        for i in range(len(indices)):
-            ids.append( feature_ids[indices[i]-1] )
-            values.append( values[indices[i]-1] )
-        return [ids, values]
+        try:
+            values = pyslic.computefeatures(img,'field-dna+')
+            indices = [12,10,11,1,18,17,6,7,8,9,20,2,3,19,4,5,21,22,13,14,15,16]
+            for i in range(len(indices)):
+                ids.append( feature_ids[indices[i]-1] )
+                values.append( values[indices[i]-1] )
+            return [ids, values]
+        catch:
+            return [[],[]]
     elif set=="slf35":
         #make pyslic image container
         img=pyslic.Image()
@@ -156,12 +159,15 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         ids = []
         features = []
 
-        values = pyslic.computefeatures(img,'field-dna+')
-        indices =[170,77,119,13,25,100,167,85,173,160,3,165,83,82,30,16,134,96,114,35,94,98,168]
-        for i in range(len(indices)):
-            ids.append( feature_ids[indices[i]-1] )
-            features.append( values[indices[i]-1] )
-        return [ids, features]
+        try:
+            values = pyslic.computefeatures(img,'field-dna+')
+            indices =[170,77,119,13,25,100,167,85,173,160,3,165,83,82,30,16,134,96,114,35,94,98,168]
+            for i in range(len(indices)):
+                ids.append( feature_ids[indices[i]-1] )
+                features.append( values[indices[i]-1] )
+            return [ids, features]
+        catch:
+            return [[],[]]
     else:
         ids = []
         values = []
