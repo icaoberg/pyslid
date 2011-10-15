@@ -9,7 +9,8 @@ Carnegie Mellon University
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
-by the Free Software Foundation; either version 2 of the License,
+by the Free So
+ tware Foundation; either version 2 of the License,
 or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but
@@ -74,30 +75,31 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         img=pyslic.Image()
         img.label=iid
         img.scale=scale
+		
         if len(channels) != 2:
             channels = [ 0, 1 ]
+        labels = [ 'protein', 'dna' ] 
 
         for channel in channels:
-            img.channels[ len(img.channels) ] = channel
-            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,pixels,channel,zslice,timepoint)
+            img.channels[ labels[channel] ] = channel
+            img.channeldata[ labels[channel] ] = pslid.utilities.getPlane(session,iid,pixels,channel,zslice,timepoint)
         
         img.loaded=True
         features = []
 
-        features = pyslic.computefeatures(img,'field-dna+')
-        return [feature_ids[0:173], features]
+        try:
+             features = pyslic.computefeatures(img,'field-dna+')
+             return [feature_ids[0:173], features]
+        catch:
+             return [[],[]]
     elif set=="slf33":
         #make pyslic image container
         img=pyslic.Image()
         img.label=iid
         img.scale=scale
 
-        if len(channels) != 1:
-            channels = [0]
-
-        for channel in channels:
-            img.channels[ len(img.channels) ] = channel
-            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+        img.channels[ 'protein' ] = channels[0]
+        img.channeldata[ 'protein' ] = pslid.utilities.getPlane(session,iid,zslice,channels[0],timepoint)
 
         img.loaded=True
         ids = []
@@ -105,9 +107,13 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
 
         indices=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163]
         for i in range(len(indices)):
-            ids.append( feature_ids[indices[i]-1] )    
-        features = pyslic.computefeatures(img,'field+')
-        return [ids, features]
+            ids.append( feature_ids[indices[i]-1] )
+
+        try:
+            features = pyslic.computefeatures(img,'field+')
+            return [ids, features]
+        catch:
+            return [[],[]]
     elif set=="slf36":
         #make pyslic image container
         img=pyslic.Image()
@@ -116,10 +122,11 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
 
         if len(channels) != 2:
            channels = [ 0, 1 ]
+        labels = [ 'protein', 'dna' ] 
 
         for channel in channels:
-            img.channels[ len(img.channels) ] = channel
-            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+            img.channels[ labels[channel] ] = channel
+            img.channeldata[ labels[channel] ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
 
         img.loaded=True
         ids = []
@@ -139,10 +146,11 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
 
         if len(channels) != 2:
             channels = [0, 1]
+        labels = [ 'protein', 'dna' ] 
 
         for channel in channels:
-            img.channels[ len(img.channels) ] = channel
-            img.channeldata[ len(img.channeldata) ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
+            img.channels[ labels[channel] ] = channel
+            img.channeldata[ labels[channel] ] = pslid.utilities.getPlane(session,iid,zslice,channel,timepoint)
 
         img.loaded=True
         ids = []
@@ -159,7 +167,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         values = []
         return [ids, features]
 
-def link( client, session, iid, feature_ids, features, set, field=True, rid=None, overwrite=False ):
+def link( client, session, iid, feature_ids, features, set, field=True, rid=None, pixels=0, channel=0,zslice=0, timepoint=0 ):
     """
     Creates a table from the features vector and links
     the table to image with the given image id (iid). If the feature array is
@@ -182,63 +190,75 @@ def link( client, session, iid, feature_ids, features, set, field=True, rid=None
         return False
          
     #check if there is already a feature table attached to the image
-    if pslid.features.has( session, iid, set, field ) and not overwrite:
-        return False
-
-    if overwrite:
-        pslid.features.unlink( client, session, iid, set, field, rid )
-
-    try:
-        columns = []
-        for i in range(len(features)):
-            if not feature_ids:
-                try:
-                    #create columns and append headers
-                    columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
-                except:
-                    return False
+    if pslid.features.has( session, iid, set, field ):
+        table = pslid.tables.get( session, iid, set, field, rid )
+    else:
+        #create shared resources
+        resources = session.sharedResources()
+	
+        #create file repository
+        repositories = resources.repositories()
+	
+	    # link features table
+        try:
+            if field==True:
+                #table for field features
+                table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
             else:
-                try:
-                    #create columns and append headers
-                    columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
-                except:
-                    return False
-    except:
-        return False
+                #table for cell level features (roi == regions of interest)
+                table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
+			
+            #create file link
+            flink = omero.model.ImageAnnotationLinkI()
+	
+	        #create annotation 
+            annotation = omero.model.FileAnnotationI()
+    
+	        #link table to annotation object
+            annotation.file = table.getOriginalFile()
+        
+		    #create an annotation link between image and table
+            flink.link( omero.model.ImageI(iid, False), annotation )
+    
+	        #update service to reflect changes
+            session.getUpdateService().saveObject(flink)
+			
+            columns = []
+            columns.append(omero.grid.LongColumn( 'pixels', 'Pixel Index', [] ))
+            columns.append(omero.grid.LongColumn( 'channel', 'Channel Index', [] ))
+            columns.append(omero.grid.LongColumn( 'zslice', 'zSlice Index', [] ))
+            columns.append(omero.grid.LongColumn( 'timepoint', 'Time Point Index', [] ))
+			
+            for i in range(len(features)):
+                if not feature_ids:
+                    try:
+                        #create columns and append headers
+                        columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
+                    except:
+                        return False
+                else:
+                    try:
+                        #create columns and append headers
+                        columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
+                    except:
+                        return False
+		
+            #add column to table
+            table.initialize(columns)
+        except:
+            return False
      
-    #create shared resources
-    resources = session.sharedResources()
-    #create file repository
-    repositories = resources.repositories()
-    #create file link
-    flink = omero.model.ImageAnnotationLinkI()
-    
-    # link features table
-    try:
-        if field==True:
-            #table for field features
-            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
-        else:
-            #table for cell level features (roi == regions of interest)
-            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
-    except:
-        return False    
-   
-    #create annotation 
-    annotation = omero.model.FileAnnotationI()
-    #link table to annotation object
-    annotation.file = table.getOriginalFile()
-    #create an annotation link between image and table
-    flink.link( omero.model.ImageI(iid, False), annotation )
-    #update service to reflect changes
-    session.getUpdateService().saveObject(flink)
-    
-    #add column to table
-    table.initialize(columns)
 
-    for i in range(len(features)):
+
+
+   
+
+    
+    
+
+    for i in range(4,len(features)+4):
         #add data to the columns
-        columns[i].values.append( float(features[i]) )  
+        columns[i].values.append( float(features[i-4]) )  
 
     #add data to the columns
     table.addData( columns )
