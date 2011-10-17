@@ -317,7 +317,7 @@ def get( session, iid, set="slf34", field=True, rid=[], pixels=0, channel=0, zsl
                 features.append( value.values[0] )
 
             table.close()
-            return [ids,features]
+            return [ids,features[4:len(features)]]
         except:
             table.close()
             return [[],[]]
