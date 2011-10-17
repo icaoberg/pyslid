@@ -90,7 +90,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         try:
              features = pyslic.computefeatures(img,'field-dna+')
              return [feature_ids[0:173], features]
-        catch:
+        except:
              return [[],[]]
     elif set=="slf33":
         #make pyslic image container
@@ -112,7 +112,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
         try:
             features = pyslic.computefeatures(img,'field+')
             return [ids, features]
-        catch:
+        except:
             return [[],[]]
     elif set=="slf36":
         #make pyslic image container
@@ -139,7 +139,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
                 ids.append( feature_ids[indices[i]-1] )
                 values.append( values[indices[i]-1] )
             return [ids, values]
-        catch:
+        except:
             return [[],[]]
     elif set=="slf35":
         #make pyslic image container
@@ -166,7 +166,7 @@ def calculate( session, iid, set="slf34", field=True, rid=None, pixels=0, channe
                 ids.append( feature_ids[indices[i]-1] )
                 features.append( values[indices[i]-1] )
             return [ids, features]
-        catch:
+        except:
             return [[],[]]
     else:
         ids = []
@@ -199,21 +199,21 @@ def link( client, session, iid, feature_ids, features, set, field=True, rid=None
     if pslid.features.has( session, iid, set, field ):
         table = pslid.tables.get( session, iid, set, field, rid )
     else:
+        if field==True:
+            #table for field features
+            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
+        else:
+            #table for cell level features (roi == regions of interest)
+            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
+
+
         #create shared resources
         resources = session.sharedResources()
 	
         #create file repository
         repositories = resources.repositories()
 	
-	    # link features table
         try:
-            if field==True:
-                #table for field features
-                table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
-            else:
-                #table for cell level features (roi == regions of interest)
-                table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
-			
             #create file link
             flink = omero.model.ImageAnnotationLinkI()
 	
@@ -254,26 +254,29 @@ def link( client, session, iid, feature_ids, features, set, field=True, rid=None
         except:
             return False
      
+    #COMMENT: Up until this point we have done one of two things, either load an existing table, or created
+    #an empty one with the appropiate headers
+    data = table.read( range(len(table.getHeaders())), 0L, table.getNumberOfRows() );
 
-
-
-   
-
-    
-    
+    #Populate the table with the new
+    index = table.getNumberOfRows() + 1
+    data.columns[1].values[index] = long(pixels) 
+    data.columns[2].values[index] = long(channel)
+    data.columns[3].values[index] = long(zslice)
+    data.columns[4].values[index] = long(timepoint)
 
     for i in range(4,len(features)+4):
         #add data to the columns
-        columns[i].values.append( float(features[i-4]) )  
+        data.columns[i].values[index] = float(features[i-4]) 
 
     #add data to the columns
-    table.addData( columns )
+    table.update( data )
     
     #return true because it linked a table
     table.close()
     return True
 
-def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=0, zslice=0, timepoint=0 ):
+def get( session, iid, set="slf34", field=True, rid=[], pixels=0, channel=0, zslice=0, timepoint=0, calculate=False ):
     """
     Returns a features vector given an image id (iid)
     @param session
@@ -293,19 +296,31 @@ def get( session, iid, set="slf34", field=True, rid=[], calculate=False, pixels=
         fid = pslid.utilities.getFileID( session, iid, set, field )
         resources = session.sharedResources()
         table = resources.openTable( omero.model.OriginalFileI( fid, False ))
-        values = table.read( range(len(table.getHeaders())), 0L, table.getNumberOfRows() );
+        
+        #returns the whole table
+       
+        query = "(pixels ==" + str(pixels) + ") & (channel ==" + str(channel) + ") & (zslice ==" + str(zslice) + ") & (timepoint ==" + str(timepoint) + ")"
 
-        #converts a Data type to a python list
-        values = values.columns
+        try:
+            ids = table.getWhereList( query, None, 0, table.getNumberOfRows(), 1 )
 
-        ids = []
-        features = []
-      
-        for value in values:
-            ids.append( value.name )
-            features.append( value.values[0] )
-        table.close()
-        return [ids, features]
+            values = table.read( range(len(table.getHeaders())), ids[0], ids[0]+1 );
+
+            #converts a Data type to a python list
+            values = values.columns
+
+            ids = []
+            features = []
+
+            for value in values:
+                ids.append( value.name )
+                features.append( value.values[0] )
+
+            table.close()
+            return [ids,features]
+        except:
+            table.close()
+            return [[],[]]
     elif calculate:
         [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timepoint )
         return [ids, features]
