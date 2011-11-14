@@ -195,84 +195,89 @@ def link( client, session, iid, feature_ids, features, set, field=True, rid=None
     if not pslid.utilities.hasImage( session, iid ):
         return False
          
+    #create shared resources
+    resources = session.sharedResources()
+
+    #create file repository
+    repositories = resources.repositories()
+
     #check if there is already a feature table attached to the image
     if pslid.features.has( session, iid, set, field ):
-        table = pslid.tables.get( session, iid, set, field, rid )
+        table = pslid.features.getTable( session, iid, set, field, rid )
+        columns = table.read( range(len(table.getHeaders())), 0L, table.getNumberOfRows() );
+        columns = columns.columns
+        table.close()
+        pslid.features.unlink( client, session, iid, set, field, rid )
     else:
-        if field==True:
-            #table for field features
-            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
-        else:
-            #table for cell level features (roi == regions of interest)
-            table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
+        columns = []
+        columns.append(omero.grid.LongColumn( 'pixels', 'Pixel Index', [] ))
+        columns.append(omero.grid.LongColumn( 'channel', 'Channel Index', [] ))
+        columns.append(omero.grid.LongColumn( 'zslice', 'zSlice Index', [] ))
+        columns.append(omero.grid.LongColumn( 'timepoint', 'Time Point Index', [] ))
+            
+        for i in range(len(features)):
+            if not feature_ids:
+                try:
+                    #create columns and append headers
+                    columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
+                except:
+                    return False
+            else:
+                try:
+                    #create columns and append headers
+                    columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
+                except:
+                    return False
 
-
-        #create shared resources
-        resources = session.sharedResources()
-	
-        #create file repository
-        repositories = resources.repositories()
-	
-        try:
-            #create file link
-            flink = omero.model.ImageAnnotationLinkI()
-	
-	        #create annotation 
-            annotation = omero.model.FileAnnotationI()
-    
-	        #link table to annotation object
-            annotation.file = table.getOriginalFile()
-        
-		    #create an annotation link between image and table
-            flink.link( omero.model.ImageI(iid, False), annotation )
-    
-	        #update service to reflect changes
-            session.getUpdateService().saveObject(flink)
-			
-            columns = []
-            columns.append(omero.grid.LongColumn( 'pixels', 'Pixel Index', [] ))
-            columns.append(omero.grid.LongColumn( 'channel', 'Channel Index', [] ))
-            columns.append(omero.grid.LongColumn( 'zslice', 'zSlice Index', [] ))
-            columns.append(omero.grid.LongColumn( 'timepoint', 'Time Point Index', [] ))
-			
-            for i in range(len(features)):
-                if not feature_ids:
-                    try:
-                        #create columns and append headers
-                        columns.append(omero.grid.DoubleColumn(str(i), str(i), []));
-                    except:
-                        return False
-                else:
-                    try:
-                        #create columns and append headers
-                        columns.append(omero.grid.DoubleColumn(str(feature_ids[i]), str(feature_ids[i]), []));
-                    except:
-                        return False
+    if field==True:
+        #table for field features
+        table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_field.h5' )
+    else:
+        #table for cell level features (roi == regions of interest)
+        table = resources.newTable( 1, 'iid-' + str(iid) + '_feature-' + set + '_roi.h5' )
 		
-            #add column to table
-            table.initialize(columns)
-        except:
-            return False
+    #add column to table
+    table.initialize(columns)
+
+    try:
+        #create file link
+        flink = omero.model.ImageAnnotationLinkI()
+	
+        #create annotation 
+        annotation = omero.model.FileAnnotationI()
+   
+        #link table to annotation object
+        annotation.file = table.getOriginalFile()
+        
+        #create an annotation link between image and table
+        flink.link( omero.model.ImageI(iid, False), annotation )    	
+    except:
+        table.close()
+        return False
      
     #COMMENT: Up until this point we have done one of two things, either load an existing table, or created
     #an empty one with the appropiate headers
-    data = table.read( range(len(table.getHeaders())), 0L, table.getNumberOfRows() );
 
     #Populate the table with the new
-    index = table.getNumberOfRows() + 1
-    data.columns[1].values[index] = long(pixels) 
-    data.columns[2].values[index] = long(channel)
-    data.columns[3].values[index] = long(zslice)
-    data.columns[4].values[index] = long(timepoint)
+    columns[0].values.append( long(pixels) ) 
+    columns[1].values.append( long(channel) )
+    columns[2].values.append( long(zslice) )
+    columns[3].values.append( long(timepoint) )
 
     for i in range(4,len(features)+4):
         #add data to the columns
-        data.columns[i].values[index] = float(features[i-4]) 
+        columns[i].values.append( float(features[i-4]) ) 
 
-    #add data to the columns
-    table.update( data )
-    
-    #return true because it linked a table
+    #update service to reflect changes
+    session.getUpdateService().saveObject(flink)
+
+    try:
+        table.addData( columns )
+    except:
+        table.close()
+        return False
+
+    #return true because it linked/update a table
     table.close()
     return True
 
@@ -282,6 +287,13 @@ def get( session, iid, set="slf34", field=True, rid=[], pixels=0, channel=0, zsl
     @param session
     @param image id (iid)
     @param set name
+    @param field true if field features, false otherwise
+    @rid region id (rid) (not the same as region of interest id)
+    @pixels pixels index (not the same is pixel id)
+    @channel channel index
+    @zslice zslice index
+    @timepoint time point index
+    @calculate true if you want features to be calculated if a feature table is not present
     @return features vector
     """
 
@@ -292,18 +304,23 @@ def get( session, iid, set="slf34", field=True, rid=[], pixels=0, channel=0, zsl
         filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
     
     #determine if there is only one table
-    if pslid.features.has( session, iid, set, field ):        
+    if pslid.features.has( session, iid, set, field ):
+        #returns the file id associated with the table        
         fid = pslid.utilities.getFileID( session, iid, set, field )
-        resources = session.sharedResources()
-        table = resources.openTable( omero.model.OriginalFileI( fid, False ))
         
-        #returns the whole table
-       
+        resources = session.sharedResources()
+
+        #open the table given the file id
+        table = resources.openTable( omero.model.OriginalFileI( fid, False ) )
+        
+        #query a specific line in the table
         query = "(pixels ==" + str(pixels) + ") & (channel ==" + str(channel) + ") & (zslice ==" + str(zslice) + ") & (timepoint ==" + str(timepoint) + ")"
 
         try:
+            #try to get the ids that match our query
             ids = table.getWhereList( query, None, 0, table.getNumberOfRows(), 1 )
 
+            #get the values that match the ids
             values = table.read( range(len(table.getHeaders())), ids[0], ids[0]+1 );
 
             #converts a Data type to a python list
@@ -317,12 +334,14 @@ def get( session, iid, set="slf34", field=True, rid=[], pixels=0, channel=0, zsl
                 features.append( value.values[0] )
 
             table.close()
-            return [ids,features[4:len(features)]]
+            
+            #ignore the first four values of the record            
+            return [ids[4:len(features)],features[4:len(features)]]
         except:
             table.close()
             return [[],[]]
     elif calculate:
-        [ids,features] = pslid.features.calculate( session, iid, set, pixels, zslice, timepoint )
+        [ids,features] = pslid.features.calculate( session, iid, set, field, rid, pixels, channels, zslice, timepoint, None )
         return [ids, features]
     else:
         return [[],[]]
@@ -468,3 +487,36 @@ def unlink( client, session, iid, set="slf34", field=True, rid=None ):
             return False
     except:
         return False
+
+def getTable( session, iid, set="slf34", field=True, rid=[] ):
+    """
+    Returns a features table give a specific image id (iid).
+    @param session
+    @param image id (iid)
+    @param set name
+    @param field true if field features, false otherwise
+    @rid region id (rid) (not the same as region of interest id)
+    @return feature table
+    """
+
+    #features
+    if field==True:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_field.h5';
+    else:
+        filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
+
+    #determine if there is only one table
+    if pslid.features.has( session, iid, set, field ):
+        try:
+            #returns the file id associated with the table
+            fid = pslid.utilities.getFileID( session, iid, set, field )
+
+            resources = session.sharedResources()
+
+            #open the table given the file id
+            table = resources.openTable( omero.model.OriginalFileI( fid, False ) )
+            return table
+        except:
+            return []
+    else:
+        return []
