@@ -1,10 +1,12 @@
 from distutils.core import setup
-setup(name='pslid',
-      version='0.0.2',
+setup(name='pyslid',
+      version='1.0.0',
       description='Protein Subcellular Location Image Database for OMERO',
-      author='Ivan E. Cao-Berg',
+      author='Ivan E. Cao-Berg, Baek-Hwan Cho, Jennifer Bakal',
       author_email='icaoberg@cmu.edu',
+      maintainer='Robert F. Murphy',
+      maintainer_email='murphy@cmu.edu',
       url='http://murphylab.web.cmu.edu/software/',
-      py_modules=['pslid.features', 'pslid.utilities', 'pslid.tables'])
+      py_modules=['pyslid.features', 'pyslid.utilities', 'pyslid.tables'])
 
 
