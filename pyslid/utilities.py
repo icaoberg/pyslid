@@ -1,4 +1,4 @@
-"""
+'''
 Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
 Created: May 1, 2011
 Last Update: May 16, 2011
@@ -25,203 +25,178 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 For additional information visit http://murphylab.web.cmu.edu or
 send email to murphy@cmu.edu
-"""
+'''
 
 import omero, pyslic
 import omero.util.script_utils as utils
 from omero.rtypes import *
+from omero.gateway import BlitzGateway
 
-def connect( server, port, time=60 ): 
-    """
-    Helper method that connects to an OMEPSLID server.
-    @params server
-    @params port
-    @returns client
-    """
-    
-    #connects to the server
-    client = omero.client( server, port )
-    #keeps the connection alive
-    client.enableKeepAlive( time )
-    #returns a client
-    return client
-    
-def login( client, username, password ):
-    """
-    Login helper.
-    @params client
-    @params username
-    @params password
-    @return session
-    """
-     
-    #login to the server
-    session = client.createSession( username, password )
-    
-    #return session
-    return session
-
-def close( client, session ):
-    """
-    Helper method that closes the client and session.
-    @param client
-    @param session
-    """
+def connect( server, port, username, password ): 
+    '''
+    Helper method that connects to an OMERO.searcher server.
+    @param server
+    @param port
+    @param username
+    @param password
+    @returns connection
+    '''
     
     try:
-        session.close()
-        client.closeSession()
-    finally:
-        client.closeSession()
+        conn = BlitzGateway( username, password, host=server, port=int(port))
+        conn.connect()
+        return conn
+    except:
+        return None
 
-def getDataset( session, did ):
-    """
+def getDataset( conn, did ):
+    '''
     Returns a dataset with the given dataset id (did).
-    @param session
+    @param connection (conn)
     @param dataset id (did)
     @return dataset
-    """
+    '''
     
-    #create gateway
-    gateway = session.createGateway()
+    try:
+        dataset = conn.getObject("Dataset", long(did))
+    except:
+        dataset = []
+	
+    return dataset	
+	
+def getScreen( conn, sid ):
+    '''
+    Returns a screen with the given screen id (sid).
+    @param connection (conn)
+    @param screen id (sid)
+    @return screen
+    '''
     
-    if hasDataset( session, did ):
-        dataset = gateway.getDataset( did, True )
-        gateway.close()
-        return dataset
-    else:
-        print "No dataset exists with the given dataset id (did)"
-        return []
+    if not conn.isConnected():
+        return None
 
-def getDatasets( session ):
-    """
-    Returns all the datasets associated with this user.
-    @param session
-    @return datasets
-    """
-       
-    #create gateway
-    gateway = session.createGateway()
-
-    datasets =[];
-    projects=gateway.getProjects([],False)
-    for project in projects:
-        list = project.linkedDatasetList()
-        for dataset in list:
-            datasets.append(dataset)        
-  
-    gateway.close()
-    return datasets
+    try:
+        screen = conn.getObject("Screen", long(sid))
+    except:
+        screen = None
+	
+    return screen
+	
+def getPlate( conn, plid ):
+    '''
+    Returns a plate with the given plate id (plid).
+    @param connection (conn)
+    @param plate id (plid)
+    @return plate
+    '''
     
-def getFileID( session, iid, set, field=True ):
+    if not conn.isConnected():
+        return None
 
-   #check input parameters
-   if not hasImage( session, iid ):
-        print "Nonexistent image given iid"
-        return []
+    try:
+        plate = conn.getObject("Plate", long(plid))
+    except:
+        plate = None
+
+    return plate
+    
+def getFileID( conn, iid, set, field=True ):
+    '''
+    Returns the file id (fid) of an attached feature table 
+    given an image id (iid) and a setname.
+    @param connection (conn)
+    @param image id (iid)
+    @param set
+    @param field
+    @return file id (fid)
+    '''
+
+    #check input parameters
+    if not hasImage( conn, iid ):
+        return None
         
-   if not isinstance( set, str ):
-        print "Input argument set must be a string"
-        return []
+    if not isinstance( set, str ):
+        return None
         
-   if not isinstance( field, bool ):
-        print "Input argument field must be a boolean"
-        return []
+    if not isinstance( field, bool ):
+        return None
 
-   #create query service
-   query = session.getQueryService()
+    #create query service
+    query = conn.getQueryService()
 
-   #create and populate parameter
-   if field == True:
+    #create and populate parameter
+    if field == True:
        filename = 'iid-' + str(iid) + '_feature-' + set + '_field.h5';
-   else:
+    else:
        filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
 
-   #create and populate parameter
-   params = omero.sys.ParametersI()
-   params.addLong( "iid", iid );
-   params.addString( "filename", filename );
+    #create and populate parameter
+    params = omero.sys.ParametersI()
+    params.addLong( 'iid', iid );
+    params.addString( 'filename', filename );
 
-   #hql string query
-   string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
+    #hql string query
+    string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
   
-   #database query 
-   result =  query.findAllByQuery(string, params)  
-   result = query.projection( string, params )
+    try:
+       #database query  
+       result = query.projection( string, params )
    
-   #get answer
-   fid = result.pop().pop()._val._child._file._id._val
-   return fid
+       #get answer
+       fid = result.pop().pop()._val._child._file._id._val
+    except:
+       fid = None
    
-def getImage( session, iid ):
-    """
+    return fid
+   
+def getImage( conn, iid ):
+    '''
     Returns an image with the given image id (iid).
-    @param session
+    @param connection (conn)
     @param image id (iid)
     @return image
-    """
-    
-    #create gateway
-    gateway = session.createGateway()
-    
-    if hasImage( session, iid ):
-        image = gateway.getImage( iid )
-        gateway.close()
-        return image
-    else:
-        print "No image exists with the given iid"
-        return []
-    
-def getListOfImages( session, did ):
-    """
-    Returns the list of images from the given
-    dataset identification.
-    @param gateway
-    @param dataset identification
-    @return a list of images
-    """
-    
-    if hasDataset( session, did ):
-        #create gateway
-        gateway = session.createGateway()
-    
-        #retrieve dataset from server  
-        dataset = gateway.getDataset( did, True )
+    '''
+
+    if not conn.isConnected():
+       return None    
+
+    try:
+        image = conn.getObject( "Image", long(iid) )
+    except:
+        image = None
+		
+    return image 
         
-        #get images as a list
-        list = dataset.linkedImageList()
-        iids = []
-        for iid in list:
-            iids.append( iid._id._val )
-        
-        iids.sort()
-        
-        #close gateway
-        gateway.close()
-        
-        #return list of images
-        return iids
-    else:
-        print "No dataset with the give did"
-        return []
-    
-def getPlane( session, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
-    
-    #create gateway
-    gateway = session.createGateway()
-    
+def getPlane( conn, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
+    '''
+    Returns a plane with the given image id (iid) as well as pixels, channels, zslice and timepoint index.
+    @param connection (conn)
+    @param image id (iid)
+    @param pixels index
+    @param channel index
+    @param zslice index
+    @param timepoint index
+    @return plane
+    '''
+	
+    if not conn.isConnected():
+        return None
+
+    if not hasImage( conn, iid ):
+        return None
+	
     #create pixel service (needed to extract pixels from image object)
-    rawPixelsStore = session.createRawPixelsStore()
+    rawPixelsStore = conn.createRawPixelsStore()
     
     #get image
-    image = gateway.getImage( iid )
+    image = conn.getObject( "Image", long(iid) )
     
     #get plane id from image (we use zero because our images have only 
     #one pixel object per image object
-    pid = image.getPixels( pixels ).getId().getValue();
+    pid = image.getPixelsId();
     
     #retrieve pixel object
-    pixels = session.getPixelsService().retrievePixDescription(pid);
+    pixels = conn.getPixelsService().retrievePixDescription(pid);
     
     #update pixel service to match the current pixel object
     rawPixelsStore.setPixelsId( pid, True )
@@ -230,90 +205,58 @@ def getPlane( session, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
         #extract pixel object
         plane = utils.downloadPlane( rawPixelsStore, pixels, zslice, channel, timepoint );
     except:
-        return []    
+        plane = None   
 
     #close services
-    gateway.close()
     rawPixelsStore.close()
     
     #return plane
     return plane
 
-def getProject( session, prid ):
-    """
+def getProject( conn, prid ):
+    '''
     Returns a project with the given project id (prid).
-    @param session
+    @param connection (conn)
     @param project id (prid)
     @return project
-    """
-    
-    #create gateway
-    gateway = session.createGateway()
-    
-    if hasDataset( session, did ):
-        project = gateway.getProjects( [prid], True )
-        gateway.close()
-        return project
-    else:
-        gateway.close()
-        print "No project exists with the given prid"
-        return []
+    '''
 
-def getProjects( session ):
-    """
-    Returns all the projects associated with the current user.
-    @param session
-    @return projects
-    """
-    
-    #create gateway
-    gateway = session.createGateway()
+    if not conn.isConnected():
+        return None    
 
     try:
-        projects = gateway.getProjects( [], False )
-        return projects
+        project = conn.getObject( "Project", long(prid) )
     except:
-        print "Couldn't retrieve projects"
+        project = []
+	
+    return project
     
-def hasDataset( session, did ):
-    """
+def hasDataset( conn, did ):
+    '''
     Determines if there is a dataset in the OMERO database with the given dataset id (did).
-    @params session
+    @params connection (conn)
     @params dataset id (did)
     @return true if dataset exists, false otherwise
-    """
+    '''
 
-    #create query service
-    query = session.getQueryService()
-    
-    #create and populate parameter
-    params = omero.sys.ParametersI()
-    params.addLong( "did", did );
-    
-    #hql string query
-    string = "select count(*) from Dataset d where d.id = :did";
-    
-    #database query
-    result = query.projection( string, params )
-    
-    #get answer
-    answer = result.pop().pop()._val
-    
-    if answer == 0:
+    if not conn.isConnected():
+        return False
+
+    if not conn.getObject( "Dataset", long(did) ):
         return False
     else:
         return True
     
-def hasFile( session, fid ):
+def hasFile( conn, fid ):
     """
     Determines if there is a file annotation with file id (fid).
-    @params session 
+    @params connection (conn) 
     @params file id (fid)
     @return true if there is a file annotation with file id (fid), false otherwise
     """
     
     #create query service
-    query = session.getQueryService()
+    query = conn.getQueryService()
     
     #create and populate parameter
     params = omero.sys.ParametersI()
@@ -333,54 +276,61 @@ def hasFile( session, fid ):
     else:
         return True
     
-def hasImage( session, iid ):
-    """
+def hasImage( conn, iid ):
+    '''
     Determines if there is an image in the OMERO database with the given
     image id (iid).
-    @params session
+    @params connection (conn)
     @params image id (iid)
     @return true if image exists, false otherwise
-    """
+    '''
+
+    if not conn.isConnected():
+        return False
     
-    #create query service
-    query = session.getQueryService()
+    if not conn.getObject( "Image", long(iid) ):
+        return False
+    else:
+        return True
+		
+def hasPlate( conn, pid ):
+    '''
+    Determines if there is an image in the OMERO database with the given
+    plate id (pid).
+    @params conn
+    @params plate id (pid)
+    @return true if plate exists, false otherwise
+    '''
+
+    if not conn.isConnected():
+        return False
     
-    #create and populate parameter
-    params = omero.sys.ParametersI()
-    params.addLong( "iid", iid );
-    
-    #hql string query
-    string = "select count(*) from Image i where i.id = :iid";
-    
-    #database query
-    result = query.projection( string, params )
-    
-    #get answer
-    answer = result.pop().pop()._val
-    
-    if answer == 0:
+    if not conn.getObject( "Plate", long(pid) ):
         return False
     else:
         return True
     
-def hasPlane( session, pid ):
-    """
+def hasPlane( conn, plid ):
+    '''
     Determines if there is a plane in the OMERO database with the given
     plane id (pid).
-    @params session
-    @params plane id (pid)
+    @params conn
+    @params plane id (plid)
     @return true if plane exists, false otherwise
-    """
-    
+    '''
+
+    if not conn.isConnected():
+        return False    
+
     #create query service
-    query = session.getQueryService()
+    query = conn.getQueryService()
     
     #create and populate parameter
     params = omero.sys.ParametersI()
-    params.addLong( "pid", pid );
+    params.addLong( "plid", plid );
     
     #hql string query
-    string = "select count(*) from Plane p where p.id = :pid";
+    string = "select count(*) from Plane p where p.id = :plid";
     
     #database query
     result = query.projection( string, params )
@@ -393,121 +343,107 @@ def hasPlane( session, pid ):
     else:
         return True
     
-def hasProject( session, prid ):
-    """
+def hasProject( conn, prid ):
+    '''
     Determines if there is a project in the OMERO database with the given
     project id (prid).
     @params session
     @params project id (prid)
     @return true if project exists, false otherwise
-    """
-    
-    #create query service
-    query = session.getQueryService()
-    
-    #create and populate parameter
-    params = omero.sys.ParametersI()
-    params.addLong( "prid", prid );
-    
-    #hql string query
-    string = "select count(*) from Project p where p.id = :prid";
-    
-    #database query 
-    result = query.projection( string, params )
-    
-    #get answer
-    answer = result.pop().pop()._val
-    
-    if answer == 0:
+    '''
+
+    if not conn.isConnected():
+        return False
+	
+    if not conn.getObject( "Project", long(prid) ):
         return False
     else:
         return True
     
-def getFileAnnotationLinks( session, iid, filename ):
-    """
-    Returns a list of file annotation links of a given filename from a valid
-    image id (iid)
-    @param session
-    @param image id (iid)
-    @param filename
-    @return file annotation links list
-    """
-    
-    query = session.getQueryService()
-    
-    #create and populate parameter
-    params = omero.sys.ParametersI()
-    
-    try:
-        params.addLong( "iid", iid );
-    except TypeError:
-        print "iid must be of type long"
-    
-    try:
-        params.addString( "filename", filename );
-    except TypeError:
-        print "filename must be of type string"
-    
-    #hql string query
-    string = "select iml from ImageAnnotationLink as iml join fetch iml.child as fileAnn join fetch fileAnn.file join iml.parent as img where img.id = :iid and fileAnn.file.name = :filename"
-    
-    #database query
-    fas = query.findAllByQuery( string, params )  
-    
-    faids = []
-    for fa in fas:
-        faids.append( fa._id._val )
-    
-    return faids
+def hasScreen( conn, sid ):
+    '''
+    Determines if there is a project in the OMERO database with the given
+    screen id (sid).
+    @params conn
+    @params screen id (sid)
+    @return true if screen exists, false otherwise
+    '''
 
-def createDataset( session, name ):
-    """
-    Creates a dataset with the given name and returns the dataset id for that dataset.
+    if not conn.isConnected():
+        return False
+	
+    if not conn.getObject( "Scree", long(sid) ):
+        return False
+    else:
+        return True
+	
+def createDataset( conn, name ):
+    '''
+    Create a dataset with the given name and returns the dataset id for that dataset.
     @param session
     @param name 
-    @return dataset id
-    """
+    @return dataset id (did)
+    '''
 
-    gateway = session.createGateway()
     dataset = omero.model.DatasetI()
     dataset.name = omero.rtypes.rstring( name )
 
     try:
-       dataset = gateway.saveAndReturnObject( dataset )
+        dataset = conn.getUpdateService().saveAndReturnObject(dataset)
+        did = dataset.id.val
     except:
-       gateway.close()
-       return []
+        did = None
     
-    gateway.close()
-    return dataset._id._val
+    return did
 
-def addImage2Dataset( session, iid, did ):
-    """
+def addImage2Dataset( conn, iid, did ):
+
+
+    '''
     Add an existing image to an existing dataset
-    @param session
-    @param iid
-    @param did
+    @param connection (conn)
+    @param image id (iid)
+    @param dataset id (did)
     @return true if image is added, false otherwise
-    """
+    '''
     
-    if not hasImage( session, iid ):
-        print "No image exists with the given iid"
+    if not hasImage( conn, iid ):
         return False
 
-    if not hasDataset( session, did ):
-        print "No image exists with the given iid"
+    if not hasDataset( conn, did ):
         return False    
 
-    gateway = session.createGateway()
     link = omero.model.DatasetImageLinkI()
     link.parent = omero.model.DatasetI(did, False)
     link.child = omero.model.ImageI(iid, False)
  
     try:
-       gateway.saveAndReturnObject(link)
+       conn.getUpdateService().saveAndReturnObject(link)
+       return True
     except:
-       gateway.close()
        return False
-    
-    return True
-
+	   
+def getListOfImages( conn, did ):
+    '''
+    Returns a list of image ids for a given dataset id (did).
+    @param connection (conn)
+    @param dataset id (did)
+    @return list of image ids
+    '''
+	
+    if not conn.isConnected():
+        return None
+	   
+    if not hasDataset( conn, did ):
+        return None
+		
+    try:
+        dataset = conn.getObject("Dataset", long(did))
+        links = dataset.getChildLinks()
+	iids = []
+        for image in links:
+            iids.append(long(image.getId()))
+     
+        return iids
+    except:
+        return None 
