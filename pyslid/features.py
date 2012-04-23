@@ -27,6 +27,8 @@ April 22, 2012
 
 April 23, 2012
 * I. Cao-Berg Modified features.unlink to reflect the changes in the new OMERO API
+* J. Bakal Improved features.has by setting the results to None when answer is False.
+
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -481,18 +483,22 @@ def has( conn, iid, featureset="slf33", field=True, rid=None, debug=False ):
     if not conn.isConnected():
         if debug:
             print "Unable to connect to OMERO.server"
-        return False
+        return [False, None]
 
     if not pyslid.utilities.hasImage( conn, iid ):
         if debug:
             print "No image found with the given image id"
-        return False
+        return [False, None]
 
     if not isinstance( featureset, str ):
-        return False
+        if debug:
+            print "Input argument feature set must be a string"
+        return [False, None]
 		
     if not isinstance( field, bool ):
-        return False
+        if debug:
+            print "Input argument field must be boolean"
+        return [False, None]
 
     if field == True:
         filename = 'iid-' + str(iid) + '_feature-' + str(featureset) + '_field.h5';
