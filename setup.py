@@ -7,6 +7,7 @@ setup(name='pyslid',
       maintainer='Robert F. Murphy',
       maintainer_email='murphy@cmu.edu',
       url='http://murphylab.web.cmu.edu/software/',
-      py_modules=['pyslid.features', 'pyslid.utilities', 'pyslid.database.link', 'pyslid.database.direct'])
+      py_modules=['pyslid.features', 'pyslid.utilities', 'pyslid.database.link', \
+        'pyslid.image', 'pyslid.database.direct'])
 
 
