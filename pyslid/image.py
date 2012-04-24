@@ -33,7 +33,7 @@ For additional information visit http://murphylab.web.cmu.edu or
 send email to murphy@cmu.edu
 '''
 
-import omero, pyslic
+import omero, pyslic, pyslid.utilities
 import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
@@ -121,7 +121,7 @@ def getResolution( conn, iid, debug=False ):
         return None
 
     img = pyslid.utilities.getImage( conn, iid )
-    resolution = [ img.getPixelSizeX, img.getPixelSizeY, img.getPixelSizeZ ]
+    resolution = [ img.getPixelSizeX(), img.getPixelSizeY(), img.getPixelSizeZ() ]
     
     return resolution
 
@@ -151,7 +151,9 @@ def getScale( conn, iid, debug=False ):
         return None
 
     try:
-       scale = pyslid.image.getResolution / pyslid.image.getNomimalMagnification
+       resolution = pyslid.image.getResolution( conn, iid )
+       magnification = pyslid.image.getNomimalMagnification( conn, iid )
+       scale = [resolution[0]/magnification, resolution[1]/magnification, resolution[2]/magnification]
     except:
        if debug:
            print "Unable to calculate scale"
