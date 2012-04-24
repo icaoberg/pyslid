@@ -11,6 +11,8 @@ April 24, 2012
 * I. Cao-Berg Added getNominalMagnification method that queries OMERO and
     tries to retrieve the nomimal magnification associated with an image.
     If the result is empty, then it returns the DEFAULT_MAGNIFICATION
+* I. Cao-Berg Added getResolution method that gets the pixel size in [x,y,z]
+* I. Cao-Berg Added getScale method that calculate the image scale
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -92,4 +94,67 @@ def getNomimalMagnification( conn, iid, debug=False ):
     else:
         return result
 
+def getResolution( conn, iid, debug=False ):
+    '''
+    Gets the image resolution.
 
+    If the method is unable to connect to the OMERO.server, then the method will return None.
+    If the method doesn't find an image associated with the given image id (iid), then the
+    method will return None.
+
+    For detailed outputs, set debug flag to True.
+
+    @param connection
+    @param image id (iid)
+    @param debug flag
+    @return resolution
+    '''
+
+    if not conn.isConnected():
+        if debug:
+            print "Unable to connect to OMERO.server"
+        return None
+
+    if not pyslid.utilities.hasImage( conn, iid ):
+        if debug:
+            print "No image found with the give image id"
+        return None
+
+    img = pyslid.utilities.getImage( conn, iid )
+    resolution = [ img.getPixelSizeX, img.getPixelSizeY, img.getPixelSizeZ ]
+    
+    return resolution
+
+def getScale( conn, iid, debug=False ):
+    '''
+    Get image scale. Image scale is defined as resolution over nominal magnification.
+
+    If the method is unable to connect to the OMERO.server, then the method will return None.
+    If the method doesn't find an image associated with the given image id (iid), then the
+    method will return None.
+
+    For detailed outputs, set debug flag to True.
+
+    @param connection
+    @param image id (iid)
+    @param debug flag
+    '''
+
+    if not conn.isConnected():
+        if debug:
+            print "Unable to connect to OMERO.server"
+        return None
+
+    if not pyslid.utilities.hasImage( conn, iid ):
+        if debug:
+            print "No image found with the give image id"
+        return None
+
+    try:
+       scale = pyslid.image.getResolution / pyslid.image.getNomimalMagnification
+    except:
+       if debug:
+           print "Unable to calculate scale"
+       scale = None
+
+    return scale
