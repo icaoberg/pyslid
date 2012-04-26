@@ -38,6 +38,7 @@ April 24, 2012
 
 April 26, 2012
 * I. Cao-Berg Added getScales method that retrieves a list of unique scales for a feature table
+* I. Cao-Berg Deprecated method getTableInfo
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published

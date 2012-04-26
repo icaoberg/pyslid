@@ -104,6 +104,9 @@ def getFileID( conn, iid, set, field=True ):
     '''
     Returns the file id (fid) of an attached feature table 
     given an image id (iid) and a setname.
+
+    (DEPRECATED) This method has been replaced by table.getFileID
+
     @param connection (conn)
     @param image id (iid)
     @param set
