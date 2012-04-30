@@ -40,6 +40,9 @@ April 26, 2012
 * I. Cao-Berg Added getScales method that retrieves a list of unique scales for a feature table
 * I. Cao-Berg Deprecated method getTableInfo
 
+April 30, 2012
+* I. Cao-Berg Changed query in method features.get
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -63,6 +66,7 @@ import omero, pyslic, pyslid.utilities, pyslid.image
 import omero.callbacks
 from omero.gateway import BlitzGateway
 import omero.util.script_utils as utils
+import numpy
 
 def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     '''
@@ -473,7 +477,8 @@ def get( conn, option, iid, scale=[], set="slf33", field=True, rid=None, pixels=
 
         elif option == 'features':
             #query a specific line in the table
-            query = "(pixels ==" + str(pixels) + ") & (scale ==" + str(scale) + ") & (channel ==" + str(channel) +") & (zslice ==" + str(zslice) + ") & (timepoint =="  + str(timepoint) + ")"
+            #icaoberg april 30, 2012
+            query = "(pixels ==" + repr(pixels) + ") & (scale ==" + repr(scale) + ") & (channel ==" + repr(channel) +") & (zslice ==" + repr(zslice) + ") & (timepoint =="  + repr(timepoint) + ")"
             try:
                 #try to get the ids that match our query
                 ids = table.getWhereList( query, None, 0, table.getNumberOfRows(), 1 )
@@ -817,7 +822,7 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
         return []
 
     try: 
-        table = pyslid.features.get( conn, 'table', iid, set, field, rid )
+        table = pyslid.features.get( conn, 'table', iid, 1, set, field )
     except:
         if debug:
            print "Unable to retrieve feature table"
@@ -825,12 +830,11 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
 
     data = table.read([4],0L,table.getNumberOfRows())
     data = data.columns
+    data = data.pop()
 
     scales = []
-    for scale in data:
-       scales.append( scale.values[0] )
+    for index in range(len(data.values)):
+       scales.append( data.values[index] )
 
-    scales = set(scales)
-    scales = list(scales)
-    
+    scales = numpy.unique( scales )    
     return scales
