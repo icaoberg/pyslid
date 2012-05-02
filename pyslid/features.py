@@ -43,6 +43,10 @@ April 26, 2012
 April 30, 2012
 * I. Cao-Berg Changed query in method features.get
 
+May 2, 2012
+* I. Cao-Berg Renamed features.has to features.hasTable
+* I. Cao-Berg Made features.has which now checks for a specific feature vector
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -110,7 +114,7 @@ def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     for im in img_gen:
         num_image +=1
         iid = long(im.getId())
-        answer, result = has(conn, iid, set, field)
+        [answer, result] = hasTable(conn, iid, set, field)
         if answer:
             num_image_table +=1
 
@@ -426,8 +430,7 @@ def unlink( conn, iid, set="slf34", field=True, rid=None, debug=False ):
            print "Unable to delete feature table"
         return False
  
-
-def get( conn, option, iid, scale=[], set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, calculate=False, debug=False ):
+def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, calculate=False, debug=False ):
     '''
     Returns a features vector given an image id (iid), pixels, channel, zslice, and timepoint
     @param connection (conn)
@@ -464,7 +467,7 @@ def get( conn, option, iid, scale=[], set="slf33", field=True, rid=None, pixels=
         filename = 'iid-' + str(iid) + '_feature-' + set + '_roi.h5';
 
     #determine if there is only one table
-    [answer, result] = has( conn, iid, set, field )
+    [answer, result] = hasTable( conn, iid, set, field )
         
     if answer:
         #returns the file id associated with the table
@@ -495,8 +498,8 @@ def get( conn, option, iid, scale=[], set="slf33", field=True, rid=None, pixels=
                 #ignore the first four values of the record
 
                 #icaoberg march 23, 2012
-                ids = ids[6:len(ids)]
-                features = features[6:len(features)]
+                ids = ids[5:len(ids)]
+                features = features[5:len(features)]
                 return [ids,features]
             except:
                 if table is not None:
@@ -530,7 +533,7 @@ def get( conn, option, iid, scale=[], set="slf33", field=True, rid=None, pixels=
     else:
         return [[],[]]
 
-def has( conn, iid, featureset="slf33", field=True, rid=None, debug=False ):
+def hasTable( conn, iid, featureset="slf33", field=True, rid=None, debug=False ):
     '''
     Returns a boleean flag and and results from the query  if the image 
     has a feature table attached to it.
@@ -676,7 +679,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
         columns.append(omero.grid.DoubleColumn( str(fid), str(fid), [] ))
 
     # if there is already a feature table attached to the image, this will add the features row to the table
-    [answer, result] = has(conn, iid, set, field)
+    [answer, result] = hasTable(conn, iid, set, field)
 	
     if answer:
         fid = result.getId().getValue()
@@ -776,7 +779,7 @@ def calculateOnDataset( conn, did, set="slf33", field=True, debug=False):
     for im in img_gen:
         num_image +=1
         iid = long(im.getId())
-        [answer, result] = has(conn, iid, featureset, field)
+        [answer, result] = hasTable(conn, iid, featureset, field)
         session = conn.c.sf
         if not answer:
             num_image_calculate +=1
@@ -838,3 +841,17 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
 
     scales = numpy.unique( scales )    
     return scales
+
+def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, debug=False ):
+    try:
+        option = 'features'
+        calculate = False
+        [ids,features]=pyslid.features.get( conn, option, iid, scale, set, field,rid, pixels, channel, zslice, timepoint, calculate, debug )
+        if not ids:
+            return False
+        else:
+            return True
+    except:
+        if debug:
+           print "Unable to retrieve features"
+        return False
