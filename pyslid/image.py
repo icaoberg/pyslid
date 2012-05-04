@@ -14,6 +14,19 @@ April 24, 2012
 * I. Cao-Berg Added getResolution method that gets the pixel size in [x,y,z]
 * I. Cao-Berg Added getScale method that calculate the image scale
 
+May 2, 2012
+* I. Cao-Berg Added method for retrieving a list of image ids for the current user
+
+try:
+   query = conn.getQueryService()
+   me = conn.getAdminService().getEventContext().userId
+   string = "select i.id from Image i where i.details.owner.id = :id"
+   params = omero.sys.ParametersI().addId(me)
+   iids = omero.rtypes.unwrap(query.projection(string,params))
+   return iids
+except:
+   return []
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -160,3 +173,26 @@ def getScale( conn, iid, debug=False ):
        scale = None
 
     return scale
+
+def getList( conn, debug=False ):
+   '''
+   Returns a list of image ids (iids) from images owned by the user making the connection.
+   @param conn
+   @returns image ids (iids) list
+   '''
+   if not conn.isConnected():
+       if debug:
+           print "Unable to connect to OMERO.server"
+       return []
+
+   try:
+      query = conn.getQueryService()
+      me = conn.getAdminService().getEventContext().userId
+      string = "select i.id from Image i where i.details.owner.id = :id"
+      params = omero.sys.ParametersI().addId(me)
+      iids = omero.rtypes.unwrap(query.projection(string,params))
+      return iids 
+   except:
+      if debug:
+          print "Unable to run query"
+      return []
