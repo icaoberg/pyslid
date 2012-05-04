@@ -7,6 +7,9 @@ Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
 
+May 4, 2012
+* J. Bakal Updated
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -345,6 +348,7 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
     if answer is True:
         # update image by image
         for DID in dataset_id_list:
+            print 'starting dataset: '+str(DID)
             ds = conn.getObject("Dataset", long(DID))
             img_gen = ds.getChildLinks()
 
@@ -360,9 +364,12 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
                 iid = long(im.getId())
                 
                 print iid
-                answer2, result =pyslid.features.has(conn, iid, featureset, field)
+                answer2, result =pyslid.features.hasTable(conn, iid, featureset, field)
                 if answer2:
-                    [ids, feats] = pyslid.features.get(conn, 'vector', iid, featureset, field)
+                    scales=pyslid.features.getScales(conn, iid, featureset, field)
+                    scale=scales[0]
+#                    scale=0.645
+                    [ids, feats] = pyslid.features.get(conn, 'vector', iid, scale, featureset, field)
                     if len(ids) == 0:
                         print str(iid)+' has wrong table'
                     else:
@@ -372,8 +379,8 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
                             CHANNEL.append(long(feat[1]))
                             ZSLICE.append(long(feat[2]))
                             TIMEPOINT.append(long(feat[3]))
-                            FEATURE_IDS = list(ids[4:])
-                            features_array.append(list(feat[4:]))
+                            FEATURE_IDS = list(ids[5:])
+                            features_array.append(list(feat[5:]))
 
 
             updateDataset(conn, server, username, IID, PIXELS, CHANNEL, ZSLICE, TIMEPOINT, FEATURE_IDS, features_array, featureset, did)
@@ -429,13 +436,14 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
+        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
         tup.append( long(iid ) )
         tup.append( long(pixels) )
         tup.append( long(channel) ) 
         tup.append( long(zslice) )  
         tup.append( long(timepoint) )
-        for j in range(8, len(feature_ids)+8):
-           tup.append( float(features[j-8]) )
+        for j in range(9, len(feature_ids)+9):
+           tup.append( float(features[j-9]) )
 
         Data.append(tup)
 
@@ -511,13 +519,14 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
             tup.append( long(IND) )   #INDEX
             tup.append( str(server) )
             tup.append( str(username) )
+            tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
             tup.append( long(iid[i]) )   
             tup.append( long(pixels[i]) )
             tup.append( long(channel[i]) ) 
             tup.append( long(zslice[i]) )  
             tup.append( long(timepoint[i]) )
-            for j in range(8, len(feature_ids)+8):
-               tup.append( float(features[i][j-8]) )
+            for j in range(9, len(feature_ids)+9):
+               tup.append( float(features[i][j-9]) )
 
             Data.append(tup)
 
