@@ -337,7 +337,7 @@ def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zsli
             print "Unable to connect to OMERO.server"
         return False
     
-    if not pyslid.utilities.hasImage( session, iid ):
+    if not pyslid.utilities.hasImage( conn, iid ):
         if debug:
             print "No image found with the given image id"
         return False
@@ -404,7 +404,7 @@ def unlink( conn, iid, set="slf34", field=True, rid=None, debug=False ):
            print "Unable to connect to OMERO.server"
         return False
 
-    if not pyslid.utilities.hasImage( session, iid ):
+    if not pyslid.utilities.hasImage( conn, iid ):
         if debug:
             print "No image found with the given image id"
         return False
@@ -527,7 +527,7 @@ def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixel
                 return None
     elif calculate:
         # to do
-        #[ids,features] = pyslid.features.calculate( session, iid, set, field, rid,pixels, channels, zslice, timepoint, None )
+        #[ids,features] = pyslid.features.calculate( conn, iid, set, field, rid,pixels, channels, zslice, timepoint, None )
         #return [ids, features]
         return [[],[]]
     else:
@@ -677,7 +677,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
 
     for fid in fids:
         columns.append(omero.grid.DoubleColumn( str(fid), str(fid), [] ))
-
+	
     # if there is already a feature table attached to the image, this will add the features row to the table
     [answer, result] = hasTable(conn, iid, set, field)
 	

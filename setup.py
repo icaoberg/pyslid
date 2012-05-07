@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name='pyslid',
-      version='1.0.0',
+      version='1.0.1',
       description='Protein Subcellular Location Image Database for OMERO',
       author='Ivan E. Cao-Berg, Baek-Hwan Cho, Jennifer Bakal',
       author_email='icaoberg@cmu.edu',
