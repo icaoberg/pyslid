@@ -47,6 +47,11 @@ May 2, 2012
 * I. Cao-Berg Renamed features.has to features.hasTable
 * I. Cao-Berg Made features.has which now checks for a specific feature vector
 
+May 7, 2012
+* I. Cao-Berg Added try catch statement on features.getScales so that it returns an empty vector
+     if it fails at reading values from a table
+* I. Cao-Berg Fixed bug in features.unlink where it was still referencing the old API
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -831,16 +836,26 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
            print "Unable to retrieve feature table"
         return []
 
-    data = table.read([4],0L,table.getNumberOfRows())
-    data = data.columns
-    data = data.pop()
+    if not table:
+        if debug:
+           print "Empty table. Nothing to return."
+        return []
+    else:
+        try:
+           data = table.read([4],0L,table.getNumberOfRows())
+           data = data.columns
+           data = data.pop()
 
-    scales = []
-    for index in range(len(data.values)):
-       scales.append( data.values[index] )
+           scales = []
+           for index in range(len(data.values)):
+                scales.append( data.values[index] )
 
-    scales = numpy.unique( scales )    
-    return scales
+           scales = numpy.unique( scales )    
+           return scales
+        except:
+           if debug:
+               print "Empty table. Nothing to return."
+           return []
 
 def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, debug=False ):
     try:
