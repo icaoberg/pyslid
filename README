@@ -1,0 +1,28 @@
+Protein Subcellular Location Image Database for Python
+======================================================
+
+Pre-Requisites
+==============
+-pyslic, numpy, scipy, mahotas, milk, matplotlib, libFreeImage, omero
+
+To install the prerequesites in Ubuntu, try
+#!/bin/bash
+sudo apt-get update
+sudo apt-get install setup-tools python-matplotlib
+sudo easy_install pip
+sudo pip install pyslic
+
+This should install all the prerequisites except OMERO. This package assumes you
+have installed OMERO server in the system running PySLID.
+
+For instructions on installing OMERO visit
+http://www.openmicroscopy.org/site/support/omero4/sysadmins/unix/server-installation.html
+
+For an updated helper script for installing the prerequisites visit
+https://gist.github.com/3940962
+
+Installation
+============
+Run
+> sudo python setup.py install
+ 
