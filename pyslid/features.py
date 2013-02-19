@@ -54,6 +54,7 @@ May 7, 2012
 
 February 19, 2013
 * I. Cao-Berg Made changes to method to reflect changes to the OMERO API
+* I. Cao-Berg Included the import of scipy
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -78,7 +79,8 @@ import omero, pyslic, pyslid.utilities, pyslid.image
 import omero.callbacks
 from omero.gateway import BlitzGateway
 import omero.util.script_utils as utils
-import numpy
+#icaoberg 16/02/2012
+import numpy, scipy
 
 def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     '''
