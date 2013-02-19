@@ -52,6 +52,9 @@ May 7, 2012
      if it fails at reading values from a table
 * I. Cao-Berg Fixed bug in features.unlink where it was still referencing the old API
 
+February 19, 2013
+* I. Cao-Berg Made changes to method to reflect changes to the OMERO API
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -170,11 +173,13 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
                 threshold = 10*1024;
 
             #check if image size is greater than threshold value
-            if image.getPixels(pixels).getSizeX().getValue() > threshold:
+            #icaoberg 19/02/2013
+            if image.getPixelSizeY() > threshold:
                 if debug:
                     print "Image size is greater than threshold value"
                 return [[],[],None]
-            elif image.getPixels(pixels).getSizeY().getValue() > threshold:
+            #icaoberg 19/02/2013
+            elif image.getPixelSizeY() > threshold:
                 if debug:
                     print "Image size is greater than threshold value"
                 return [[],[],None]
