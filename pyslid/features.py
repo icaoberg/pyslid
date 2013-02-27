@@ -56,6 +56,10 @@ February 19, 2013
 * I. Cao-Berg Made changes to method to reflect changes to the OMERO API
 * I. Cao-Berg Included the import of scipy
 
+February 27, 2012
+* I. Cao-Berg Fixed small bug were method was returning None when successfully linking
+a table
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -710,6 +714,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
 
         table.addData(columns)
         table.close()
+        return True
     else:
         # create a new table and link it to the image
         if field==True:
