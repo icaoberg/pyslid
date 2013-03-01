@@ -56,9 +56,13 @@ February 19, 2013
 * I. Cao-Berg Made changes to method to reflect changes to the OMERO API
 * I. Cao-Berg Included the import of scipy
 
-February 27, 2012
+February 27, 2013
 * I. Cao-Berg Fixed small bug were method was returning None when successfully linking
 a table
+
+March 1, 2013
+* I. Cao-Berg Fixed small bug in calculate where the method was returning two values
+instead of three when a feature set name is unknown or unrecognized
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -318,9 +322,11 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         except:
             return [[],[], None]
     else:
+        if debug:
+           print "Invalid feature set name"
         ids = []
         features = []
-        return [ids, features]
+        return [ids, features, None]
 		
 def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zslice=0, timepoint=0, threshold=None, overwrite=False, debug=False ):
     '''
