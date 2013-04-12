@@ -844,6 +844,7 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
            return scales
         except:
            print "Empty table. Nothing to return."
+           raise
            return []
 
 def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, debug=False ):
@@ -868,10 +869,9 @@ def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, cha
         option = 'features'
         calculate = False
         [ids,features]=pyslid.features.get( conn, option, iid, scale, set, field,rid, pixels, channel, zslice, timepoint, calculate, debug )
-        if not ids:
-            return False
-        else:
-            return True
+        return True
+    except PyslidException:
+        return False
     except:
         print "Unable to retrieve features"
         return False
