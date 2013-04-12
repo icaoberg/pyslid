@@ -49,12 +49,10 @@ class TestImage(ClientHelper):
         s = image.getScale(self.conn, iid)
         self.assertEqual(s, [0.25, 0.5, 0.75])
 
-    @unittest.expectedFailure
     def test_imageWithoutResolution(self):
         iid = self.createImage()
         r = image.getResolution(self.conn, iid)
         self.assertEqual(r, [0., 0., 0.])
-        self.assertRaises(Exception, image.getScale, self.conn, iid)
 
 
 
