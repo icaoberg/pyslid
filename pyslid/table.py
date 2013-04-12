@@ -27,6 +27,7 @@ send email to murphy@cmu.edu
 '''
 
 import omero, pyslic
+from utilities import PyslidException
 import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
@@ -50,19 +51,13 @@ def getInfo(conn, did, set="slf33", field=True, debug=False ):
     '''
     
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
-        return [None,None]
+        raise PyslidException("Unable to connect to OMERO.server")
 
     if not pyslid.utilities.hasDataset( conn, did ):
-        if debug:
-            print "No dataset found with the given dataset id"
-        return [None,None]
+        raise PyslidException("No dataset found with the given dataset id")
 
     if not isinstance( field, bool ):
-        if debug:
-            print "Input parameter field must be a boolean"
-        return [None,None]
+        raise PyslidException("Input parameter field must be a boolean")
 
     ds = conn.getObject("Dataset", long(did))
     img_gen = ds.getChildLinks()
@@ -88,20 +83,17 @@ def getFileID( conn, iid, set, field=True, debug=False ):
     '''
     #check input parameters
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     if not hasImage( conn, iid ):
-        if debug:
-            print ""
-        return None
+        raise PyslidException("Image not found")
         
     if not isinstance( set, str ):
-        return None
+        raise PyslidException("Parameter set should be a string")
         
     if not isinstance( field, bool ):
-        return None
+        raise PyslidException("Parameter field should be a bool")
+
     #create query service
     query = conn.getQueryService()
 
@@ -124,9 +116,7 @@ def getFileID( conn, iid, set, field=True, debug=False ):
        #get answer
        fid = result.pop().pop()._val._child._file._id._val
     except:
-       if debug:
-           print "Unable to retrieve query"
-       fid = None
+        raise PyslidException("Unable to retrieve query")
    
     return fid
  

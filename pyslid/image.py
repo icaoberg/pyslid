@@ -47,6 +47,7 @@ send email to murphy@cmu.edu
 '''
 
 import omero, pyslic, pyslid.utilities
+from utilities import PyslidException
 import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
@@ -74,14 +75,10 @@ def getNomimalMagnification( conn, iid, debug=False ):
     DEFAULT_MAGNIFICATION = 40
        
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the give image id"
-        return None
+        raise PyslidException("No image found with the give image id")
 
     #create and populate parameter
     params = omero.sys.ParametersI()
@@ -96,9 +93,7 @@ def getNomimalMagnification( conn, iid, debug=False ):
     try:
         result = query.findByQuery(string, params.page(0,1))
     except:
-        if debug:
-            print "Unable to run query"
-	    result = None
+        raise PyslidException("Unable to run query")
 
     if not result:
         if debug:
@@ -124,14 +119,10 @@ def getResolution( conn, iid, debug=False ):
     '''
 
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the give image id"
-        return None
+        raise PyslidException("No image found with the give image id")
 
     img = pyslid.utilities.getImage( conn, iid )
     resolution = [ img.getPixelSizeX(), img.getPixelSizeY(), img.getPixelSizeZ() ]
@@ -154,23 +145,17 @@ def getScale( conn, iid, debug=False ):
     '''
 
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the give image id"
-        return None
+        raise PyslidException("No image found with the give image id")
 
     try:
        resolution = pyslid.image.getResolution( conn, iid )
        magnification = pyslid.image.getNomimalMagnification( conn, iid )
        scale = [resolution[0]/magnification, resolution[1]/magnification, resolution[2]/magnification]
     except:
-       if debug:
-           print "Unable to calculate scale"
-       scale = None
+        raise PyslidException("Unable to calculate scale")
 
     return scale
 
@@ -181,9 +166,7 @@ def getList( conn, debug=False ):
    @returns image ids (iids) list
    '''
    if not conn.isConnected():
-       if debug:
-           print "Unable to connect to OMERO.server"
-       return []
+       raise PyslidException("Unable to connect to OMERO.server")
 
    try:
       query = conn.getQueryService()
@@ -193,6 +176,4 @@ def getList( conn, debug=False ):
       iids = omero.rtypes.unwrap(query.projection(string,params))
       return iids 
    except:
-      if debug:
-          print "Unable to run query"
-      return []
+       raise PyslidException("Unable to run query")
