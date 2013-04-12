@@ -46,10 +46,13 @@ class ClientHelper(unittest.TestCase):
         self.cli.closeSession()
 
 
-    def createImage(self, sizeX=5, sizeY=4):
+    def createImage(self, sizeX=10, sizeY=10):
         """
         Create an image from scratch
         http://www.openmicroscopy.org/site/support/omero4/developers/Python.html#create-image
+
+        Note if images/pixel sizes are too small the feature calculation breaks
+
         @return the image ID
         """
         sizeZ, sizeC, sizeT = 1, 1, 1
@@ -65,9 +68,12 @@ class ClientHelper(unittest.TestCase):
         im = self.conn.createImageFromNumpySeq(
             planeGen(), "numpy image", sizeZ, sizeC, sizeT,
             description=desc, dataset=None)
-        return im.getId()
 
-    def createImageWithRes(self):
+        iid = im.getId()
+        print 'Created Image: %d' % iid
+        return iid
+
+    def createImageWithRes(self, sizeX=10, sizeY=10):
         iid = self.createImage()
         p = self.conn.getObject('Image', iid).getPrimaryPixels()
         p.setPhysicalSizeX(omero.rtypes.rdouble(10))
