@@ -439,7 +439,7 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
-        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
+        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid))
         tup.append( long(iid ) )
         tup.append( long(pixels) )
         tup.append( long(channel) ) 
