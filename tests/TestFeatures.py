@@ -147,7 +147,7 @@ class TestFeatures(ClientHelper):
         self.assertEqual(tid, r.getId())
 
     def test_getIds(self):
-        ids = features.getIds(set=real_ftset)
+        ids = features.getIds(set=self.real_ftset)
         self.assertEqual(len(ids), 161)
         self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
 
