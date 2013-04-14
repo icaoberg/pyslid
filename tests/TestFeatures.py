@@ -44,7 +44,8 @@ class TestFeatures(ClientHelper):
 
     def setUp(self):
         super(TestFeatures, self).setUp()
-        self.ft_set = 'slf33'
+        self.real_ftset = 'slf33'
+        self.fake_ftset = 'test'
 
     def tableImageAnnotation(self, table, iid):
         fa = omero.model.FileAnnotationI()
@@ -58,13 +59,13 @@ class TestFeatures(ClientHelper):
         scale = 0.5
         fids = ['f1', 'f2']
         feats = array([1.0, 2.0])
-        ftset = 'test'
         px = 123
         ch = 0
         z = 5
         t = 41
-        features.link(self.conn, iid, scale, fids, feats, ftset, field=True,
-                      rid=None, pixels=px, channel=ch,zslice=z, timepoint=t)
+        features.link(self.conn, iid, scale, fids, feats, self.fake_ftset,
+                      field=True, rid=None, pixels=px, channel=ch,zslice=z,
+                      timepoint=t)
         return iid
 
     def checkFeaturesTable(self, t):
@@ -82,7 +83,7 @@ class TestFeatures(ClientHelper):
         scale = 1.0
         ch = [0]
         [ids, feats, scaleo] = features.calculate(
-            self.conn, iid, scale=scale, set=self.ft_set, channels=ch)
+            self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
 
         self.assertEqual(len(ids), 161)
         self.assertEqual(len(ids), len(set(ids)))
@@ -132,27 +133,26 @@ class TestFeatures(ClientHelper):
 
     def test_hasTable(self):
         iid = self.createImageWithRes()
-        ftset = 'test'
 
         b, r = features.hasTable(
-            self.conn, iid, featureset=ftset, field=True, rid=None)
+            self.conn, iid, featureset=self.fake_ftset, field=True, rid=None)
         self.assertFalse(b)
         self.assertIsNone(r)
 
-        filename = 'iid-%d_feature-%s_field.h5' % (iid, ftset)
+        filename = 'iid-%d_feature-%s_field.h5' % (iid, self.fake_ftset)
         table = self.conn.getSharedResources().newTable(1, filename)
         tid = table.getOriginalFile().getId()
         self.tableImageAnnotation(table, iid)
         table.close()
 
         b, r = features.hasTable(
-            self.conn, iid, featureset=ftset, field=True, rid=None)
+            self.conn, iid, featureset=self.fake_ftset, field=True, rid=None)
         self.assertTrue(b)
         self.assertIsNotNone(r)
         self.assertEqual(tid, r.getId())
 
     def test_getIds(self):
-        ids = features.getIds(set='slf33')
+        ids = features.getIds(set=real_ftset)
         self.assertEqual(len(ids), 161)
         self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
 
@@ -171,9 +171,7 @@ class TestFeatures(ClientHelper):
 
     def test_getScales(self):
         iid = self.createImageWithRes()
-        ftset = 'test'
-
-        filename = 'iid-%d_feature-%s_field.h5' % (iid, ftset)
+        filename = 'iid-%d_feature-%s_field.h5' % (iid, self.fake_ftset)
         table = self.conn.getSharedResources().newTable(1, filename)
         cols = [
             omero.grid.LongColumn('pixels', '', [12, 14]),
@@ -187,7 +185,8 @@ class TestFeatures(ClientHelper):
         self.tableImageAnnotation(table, iid)
         table.close()
 
-        s = features.getScales(self.conn, iid, set=ftset, field=True, rid=None)
+        s = features.getScales(self.conn, iid, set=self.fake_ftset, field=True,
+                               rid=None)
         self.assertTrue(all(s == array([0.2, 1.1])))
 
     def test_has(self):
