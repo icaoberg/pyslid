@@ -267,7 +267,7 @@ def deleteTableLink(conn, featureset, did=None):
         import os
         try:
             os.remove(result)
-            deleteNameTag(conn, featureset)
+            deleteNameTag(conn, featureset, did)
             return True
         except:
             return False
