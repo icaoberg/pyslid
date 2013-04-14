@@ -32,6 +32,7 @@ import re
 import numpy
 
 from pyslid import features
+from pyslid.utilities import PyslidException
 
 
 
@@ -97,6 +98,10 @@ class TestFeatures(ClientHelper):
         # Testing features.get()
         iid = self.createImage()
         option = 'table'
+        self.assertRaises(PyslidException, features.get,
+                          self.conn, option, iid, scale=0.5, set="test",
+                          field=True, rid=None, pixels=123, channel=0,
+                          zslice=5, timepoint=41)
 
         iid = self.createImageAndFeatures()
         t = features.get(self.conn, option, iid, scale=0.5, set="test",
