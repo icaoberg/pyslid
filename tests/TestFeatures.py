@@ -90,9 +90,24 @@ class TestFeatures(ClientHelper):
         self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
 
         self.assertEqual(len(feats), len(ids))
-        self.assertTrue(all([lambda x: not numpy.isnan(x) for f in feats]))
+        self.assertFalse(any(numpy.isnan(feats)))
 
         self.assertEqual(scaleo, scale)
+
+    def test_calculate_fail(self):
+        """
+        If an image of all 0s is given PySLIC seems to return an array of NaNs
+        which is shorter than the number of expected features (why?).
+        This should be caught instead of returning invalid data to the caller.
+        """
+        iid = self.createImageWithRes(sizeX=1, sizeY=1)
+        print iid
+        scale = 1.0
+        ch = [0]
+
+        with self.assertRaises(PyslidException):
+            [ids, feats, scaleo] = features.calculate(
+                self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
 
     def test_get_table(self):
         # Testing features.get()
