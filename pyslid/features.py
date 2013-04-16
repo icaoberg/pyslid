@@ -808,8 +808,8 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
 
     try: 
         table = pyslid.features.get( conn, 'table', iid, 1, set, field )
-    except:
-        raise PyslidException("Unable to retrieve feature table")
+    except Exception as e:
+        raise PyslidException("Unable to retrieve feature table: %s" % e)
 
     if not table:
         print "Empty table. Nothing to return."
