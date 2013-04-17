@@ -160,7 +160,7 @@ class TestDatabaseDirect(ClientHelper):
         fids = ['f1', 'f2']
         feats = array([1.0, 2.0]) + offset
 
-        return iid, px, ch, z, t, fids, feats, self.fake_ftset
+        return iid, scale, px, ch, z, t, fids, feats, self.fake_ftset
 
 
     def test_initializeNameTag(self):
@@ -384,7 +384,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(expectedpath) as f:
             d = pickle.load(f)
-        self.assertEqual(d, [])
+        self.assertEqual(d, {})
 
 
     @unittest.skip('todo (not used?)')
@@ -393,12 +393,9 @@ class TestDatabaseDirect(ClientHelper):
 
 
     def test_update(self):
-        """
-        pyslid.database.direct.update() appears to be broken
-        """
         # Non-dataset
-        iid, px, ch, z, t, fids, feats, fts = self.createFeatures()
-        a, m = pysliddb.update(self.conn, 'server', 'username',
+        iid, scale, px, ch, z, t, fids, feats, fts = self.createFeatures()
+        a, m = pysliddb.update(self.conn, 'host', 'user', scale,
                                iid, px, ch, z, t, fids, feats, fts, did=None)
         self.assertTrue(a)
         a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
@@ -406,13 +403,16 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(r) as f:
             d = pickle.load(f)
-        self.assertEqual(len(d), 1)
-        d0 = d[0]
-        self.assertEqual(len(d0), 11)
-        self.assertEqual(d0[0:3], [1, 'server', 'username'])
-        self.assertTrue(d0[3].startswith('server'))
-        self.assertEqual(d0[4:9], [iid, px, ch, z, t])
-        self.assertTrue(all(array(d0[9:]) == feats))
+        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(len(d[0.5]), 1)
+        d0 = d[0.5][0]
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+        self.assertEqual(d0[6:11], [iid, px, ch, z, t])
+        self.assertTrue(all(array(d0[11:]) == feats))
 
 
     @unittest.skip('todo (not used?)')
