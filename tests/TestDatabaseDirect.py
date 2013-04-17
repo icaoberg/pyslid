@@ -369,7 +369,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(expectedpath) as f:
             d = pickle.load(f)
-        self.assertEqual(d, [])
+        self.assertEqual(d, {})
 
         # Dataset
         a = pysliddb.initialize(
