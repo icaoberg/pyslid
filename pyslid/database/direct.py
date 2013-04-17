@@ -319,7 +319,7 @@ def initialize(conn, feature_ids, featureset, did=None):
         fullpath = OMERO_CONTENTDB_PATH + DBfilename
         output = open(fullpath, 'wb')
 
-        Data=[]
+        Data={}
         pickle.dump(Data, output)
         output.close()
             
@@ -393,7 +393,9 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
         return False
 
     
-def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+def update(conn, server, username, scale,
+           iid, pixels, channel, zslice, timepoint,
+           feature_ids, features, featureset, did=None):
     """
     Update the DB for a feature vector.
     @param conn (Blitzgateway)
@@ -426,7 +428,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         Data = pickle.load(pkl_file)
         pkl_file.close()
 
-        num_data = len(Data)
+        if scale not in Data:
+            Data[scale] = []
+        num_data = len(Data[scale])
 
 
         # 1. get the DB file name and tag
@@ -439,7 +443,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
-        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid))
+        tup.append( str(server)+'/webclient/?show=image-' + str(iid))
+        tup.append( str(server)+'/webclient/?show=image-' + str(iid))
+        tup.append( str(server)+'/webclient/img_detail/' + str(iid))
         tup.append( long(iid ) )
         tup.append( long(pixels) )
         tup.append( long(channel) ) 
@@ -448,7 +454,7 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         for j in range(9, len(feature_ids)+9):
            tup.append( float(features[j-9]) )
 
-        Data.append(tup)
+        Data[scale].append(tup)
 
         # 3. save it with the new DB file name
         fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
