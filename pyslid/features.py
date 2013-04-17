@@ -204,6 +204,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
             return [[],[],None]
 
     #set resolution based on the scale
+    print 'scale:%f imgScale:%f' %(scale, imgScale)
     if scale < 0.33 and abs(scale - imgScale)>0.001 :
          scale = imgScale
     elif scale < 0.67 and abs(scale - imgScale*2)>0.001:
@@ -243,11 +244,13 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         img.label=iid
         img.scale=scale
 
+        print 'scale: %f' % scale
         img.channels[ 'protein' ] = channels[0]
         plane = pyslid.utilities.getPlane(conn,iid,zslice,channels[0],timepoint)
         img.channeldata[ 'protein' ] = scipy.misc.imresize( plane, scale )
 
         img.loaded=True
+        print 'img: %s channeldata:%s' % (img, img.channeldata)
         ids = []
         features = []    
 
