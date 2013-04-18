@@ -377,7 +377,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(expectedpath) as f:
             d = pickle.load(f)
-        self.assertEqual(d, {})
+        self.assertEqual(d.keys(), ['info'])
 
     def test_initialize_did(self):
         feature_ids = ['f1', 'f2']
@@ -394,7 +394,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(expectedpath) as f:
             d = pickle.load(f)
-        self.assertEqual(d, {})
+        self.assertEqual(d.keys(), ['info'])
 
 
     @unittest.skip('todo (not used?)')
@@ -412,7 +412,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(r) as f:
             d = pickle.load(f)
-        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
         self.assertEqual(len(d[0.5]), 1)
         d0 = d[0.5][0]
         self.assertEqual(len(d0), 13)
@@ -434,7 +434,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(r) as f:
             d = pickle.load(f)
-        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
         self.assertEqual(len(d[0.5]), 1)
         d0 = d[0.5][0]
         self.assertEqual(len(d0), 13)
@@ -460,7 +460,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(r) as f:
             d = pickle.load(f)
-        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
         self.assertEqual(len(d[0.5]), 2)
         d0 = d[0.5][0]
         self.assertEqual(len(d0), 13)
@@ -496,7 +496,7 @@ class TestDatabaseDirect(ClientHelper):
 
         with open(r) as f:
             d = pickle.load(f)
-        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
         self.assertEqual(len(d[0.5]), 2)
         d0 = d[0.5][0]
         self.assertEqual(len(d0), 13)
