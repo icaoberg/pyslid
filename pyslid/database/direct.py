@@ -319,7 +319,7 @@ def initialize(conn, feature_ids, featureset, did=None):
         fullpath = OMERO_CONTENTDB_PATH + DBfilename
         output = open(fullpath, 'wb')
 
-        Data={}
+        Data={'info': featureset}
         pickle.dump(Data, output)
         output.close()
             
