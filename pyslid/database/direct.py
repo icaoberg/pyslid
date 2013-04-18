@@ -401,6 +401,7 @@ def update(conn, server, username, scale,
     @param conn (Blitzgateway)
     @param server (server name)
     @param username (user name)
+    @param scale (image feature scale parameter)
     @param iid (image id)
     @param pixels (pixels index)
     @param channel (channel index)
@@ -443,7 +444,7 @@ def update(conn, server, username, scale,
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
-        tup.append( str(server)+'/webclient/?show=image-' + str(iid))
+        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid))
         tup.append( str(server)+'/webclient/?show=image-' + str(iid))
         tup.append( str(server)+'/webclient/img_detail/' + str(iid))
         tup.append( long(iid ) )
