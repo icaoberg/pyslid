@@ -187,16 +187,22 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(unwrap(r[0].getNs()), expectedns)
         self.assertEqual(unwrap(r[0].getTextValue()), expecteddbn)
 
-        # Dataset
+    def test_initializeNameTag_did(self):
+        g = self.conn.getObject('ExperimenterGroup', self.gid)
+        self.assertIsNotNone(g)
+
+        expectedns, expecteddbn = self.getNames(self.fake_did)
+        r = self.getGroupTags()
+        ntags0 = 0 if r is None else len(r)
+
         ns, dbname = pysliddb.initializeNameTag(self.conn, self.fake_ftset,
                                                 did=self.fake_did)
-        expectedns, expecteddbn = self.getNames(self.fake_did)
         self.assertEqual(ns, expectedns)
         self.assertEqual(dbname, expecteddbn)
 
         r = self.getGroupTags()
-        ntags2 = len(r)
-        self.assertEqual(ntags2, ntags1 + 1)
+        ntags1 = len(r)
+        self.assertEqual(ntags1, ntags0 + 1)
         self.assertEqual(unwrap(r[0].getNs()), expectedns)
         self.assertEqual(unwrap(r[0].getTextValue()), expecteddbn)
 
@@ -264,7 +270,7 @@ class TestDatabaseDirect(ClientHelper):
             self.gid, 'all', self.fake_ftset, 3)
         self.assertEqual(dbn1, dbn3)
 
-        # Dataset
+    def test_getRecentName_did(self):
         tag1 = self.createNameTag(did=self.fake_did)
         self.saveAndLinkTag(tag1)
         tag2 = self.createNameTag(did=self.fake_did)
@@ -283,41 +289,40 @@ class TestDatabaseDirect(ClientHelper):
 
     def noautorun_has(self):
         # Run by test_has_deleteTableLink()
-
-        # Non-dataset
-        a1, r1 = pysliddb.has(self.conn, self.fake_ftset, did=None)
-        self.assertFalse(a1)
-        self.assertIsNone(r1)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
+        self.assertFalse(a)
+        self.assertIsNone(r)
 
         tag = self.createNameTag()
         self.saveAndLinkTag(tag)
         self.createFileFromNameTag(tag)
 
-        a1, r1 = pysliddb.has(self.conn, self.fake_ftset, did=None)
-        self.assertTrue(a1)
-        self.assertEqual(os.path.basename(r1), unwrap(tag.getTextValue()))
-        self.assertTrue(os.path.isfile(r1))
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
+        self.assertTrue(a)
+        self.assertEqual(os.path.basename(r), unwrap(tag.getTextValue()))
+        self.assertTrue(os.path.isfile(r))
 
-        # Dataset
-        a2, r2 = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
-        self.assertFalse(a2)
-        self.assertIsNone(r2)
+        return r
+
+    def noautorun_has_did(self):
+        # Run by test_has_deleteTableLink_did()
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
+        self.assertFalse(a)
+        self.assertIsNone(r)
 
         tag = self.createNameTag(did=self.fake_did)
         self.saveAndLinkTag(tag)
         self.createFileFromNameTag(tag)
 
-        a2, r2 = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
-        self.assertTrue(a2)
-        self.assertEqual(os.path.basename(r2), unwrap(tag.getTextValue()))
-        self.assertTrue(os.path.isfile(r2))
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
+        self.assertTrue(a)
+        self.assertEqual(os.path.basename(r), unwrap(tag.getTextValue()))
+        self.assertTrue(os.path.isfile(r))
 
-        return r1, r2
+        return r
 
-    def noautorun_deleteTableLink(self, r1, r2):
+    def noautorun_deleteTableLink(self, r):
         # Run by test_has_deleteTableLink()
-
-        # Non-dataset
         ntags0, ntags0ns, ntags0nsd = self.countTags()
         a = pysliddb.deleteTableLink(self.conn, self.fake_ftset, did=None)
         self.assertTrue(a)
@@ -326,12 +331,11 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(ntags1, ntags0 - ntags0ns)
         self.assertEqual(ntags1ns, 0)
         self.assertEqual(ntags1nsd, ntags0nsd)
-        self.assertFalse(os.path.exists(r1))
+        self.assertFalse(os.path.exists(r))
 
-        # Dataset
+    def noautorun_deleteTableLink_did(self, r):
+        # Run by test_has_deleteTableLink_did()
         ntags0, ntags0ns, ntags0nsd = self.countTags()
-        # TODO: Error in pyslid.database.direct
-        # Dataset tag isn't deleted
         a = pysliddb.deleteTableLink(
             self.conn, self.fake_ftset, did=self.fake_did)
         self.assertTrue(a)
@@ -340,11 +344,15 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(ntags1, ntags0 - ntags0nsd)
         self.assertEqual(ntags1ns, ntags0ns)
         self.assertEqual(ntags1nsd, 0)
-        self.assertFalse(os.path.exists(r2))
+        self.assertFalse(os.path.exists(r))
 
     def test_has_deleteTableLink(self):
-        r1, r2 = self.noautorun_has()
-        self.noautorun_deleteTableLink(r1, r2)
+        r = self.noautorun_has()
+        self.noautorun_deleteTableLink(r)
+
+    def test_has_deleteTableLink_did(self):
+        r = self.noautorun_has_did()
+        self.noautorun_deleteTableLink_did(r)
 
     def test_createColumns(self):
         feature_ids = ['f1', 'f2']
@@ -357,7 +365,6 @@ class TestDatabaseDirect(ClientHelper):
     def test_initialize(self):
         feature_ids = ['f1', 'f2']
 
-        # Non-dataset
         a = pysliddb.initialize(
             self.conn, feature_ids, self.fake_ftset, did=None)
         self.assertTrue(a)
@@ -372,7 +379,9 @@ class TestDatabaseDirect(ClientHelper):
             d = pickle.load(f)
         self.assertEqual(d, {})
 
-        # Dataset
+    def test_initialize_did(self):
+        feature_ids = ['f1', 'f2']
+
         a = pysliddb.initialize(
             self.conn, feature_ids, self.fake_ftset, did=self.fake_did)
         self.assertTrue(a)
@@ -394,7 +403,6 @@ class TestDatabaseDirect(ClientHelper):
 
 
     def test_update(self):
-        # Non-dataset
         iid, scale, px, ch, z, t, fids, feats, fts = self.createFeatures()
         a, m = pysliddb.update(self.conn, 'host', 'user', scale,
                                iid, px, ch, z, t, fids, feats, fts, did=None)
@@ -415,8 +423,29 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(d0[6:11], [iid, px, ch, z, t])
         self.assertTrue(all(array(d0[11:]) == feats))
 
+    def test_update_did(self):
+        iid, scale, px, ch, z, t, fids, feats, fts = self.createFeatures()
+        a, m = pysliddb.update(self.conn, 'host', 'user', scale,
+                               iid, px, ch, z, t, fids, feats, fts,
+                               did=self.fake_did)
+        self.assertTrue(a)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
+        self.assertTrue(a)
+
+        with open(r) as f:
+            d = pickle.load(f)
+        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(len(d[0.5]), 1)
+        d0 = d[0.5][0]
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+        self.assertEqual(d0[6:11], [iid, px, ch, z, t])
+        self.assertTrue(all(array(d0[11:]) == feats))
+
     def test_updateDataset(self):
-        # Non-dataset
         iid, scale, px, ch, z, t, fids, feats, fts = zip(
             self.createFeatures(0, 0.0), self.createFeatures(1, 1.0))
         scale = scale[0]
@@ -451,6 +480,42 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(d1[6:11], [iid[1], px[1], ch[1], z[1], t[1]])
         self.assertTrue(all(array(d1[11:]) == feats[1]))
 
+    def test_updateDataset_did(self):
+        iid, scale, px, ch, z, t, fids, feats, fts = zip(
+            self.createFeatures(0, 0.0), self.createFeatures(1, 1.0))
+        scale = scale[0]
+        fids = fids[0]
+        fts = fts[0]
+
+        a, m = pysliddb.updateDataset(self.conn, 'host', 'user', scale,
+                             iid, px, ch, z, t, fids, feats, fts,
+                                      did=self.fake_did)
+        self.assertTrue(a)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=self.fake_did)
+        self.assertTrue(a)
+
+        with open(r) as f:
+            d = pickle.load(f)
+        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(len(d[0.5]), 2)
+        d0 = d[0.5][0]
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+        self.assertEqual(d0[6:11], [iid[0], px[0], ch[0], z[0], t[0]])
+        self.assertTrue(all(array(d0[11:]) == feats[0]))
+
+        d1 = d[0.5][1]
+        self.assertEqual(len(d1), 13)
+        self.assertEqual(d1[0:3], [2, 'host', 'user'])
+        self.assertTrue(d1[3].startswith('host/'))
+        self.assertTrue(d1[4].startswith('host/'))
+        self.assertTrue(d1[5].startswith('host/'))
+        self.assertEqual(d1[6:11], [iid[1], px[1], ch[1], z[1], t[1]])
+        self.assertTrue(all(array(d1[11:]) == feats[1]))
+
     def test_chunks(self):
         l = range(5)
         n = 2
@@ -458,7 +523,6 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(x, [[0, 1], [2, 3], [4]])
 
     def test_retrieve(self):
-        # Non-dataset
         tag = self.createNameTag()
         self.saveAndLinkTag(tag)
         p = self.createFileFromNameTag(tag)
@@ -468,7 +532,7 @@ class TestDatabaseDirect(ClientHelper):
         d, m = pysliddb.retrieve(self.conn, self.fake_ftset, did=None)
         self.assertEqual(d, [1, 2, 3])
 
-        # Dataset
+    def test_retrieve(self):
         tag = self.createNameTag(did=self.fake_did)
         self.saveAndLinkTag(tag)
         p = self.createFileFromNameTag(tag)
