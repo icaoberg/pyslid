@@ -147,18 +147,19 @@ class TestDatabaseDirect(ClientHelper):
 
         return (tn, tns, tnsd)
 
-    def createFeatures(self, offset=0.0):
+    def createFeatures(self, ioffset = 0, foffset=0.0):
         """
         Creates a set of features and image ID metadata.
+        Use ioffset and foffset to create features with different values
         """
         iid = self.createImageWithRes()
         scale = 0.5
-        px = 123
-        ch = 0
-        z = 5
-        t = 41
+        px = 123 + ioffset
+        ch = 0 + ioffset
+        z = 5 + ioffset
+        t = 41 + ioffset
         fids = ['f1', 'f2']
-        feats = array([1.0, 2.0]) + offset
+        feats = array([1.0, 2.0]) + foffset
 
         return iid, scale, px, ch, z, t, fids, feats, self.fake_ftset
 
@@ -414,10 +415,41 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(d0[6:11], [iid, px, ch, z, t])
         self.assertTrue(all(array(d0[11:]) == feats))
 
-
-    @unittest.skip('todo (not used?)')
     def test_updateDataset(self):
-        updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None)
+        # Non-dataset
+        iid, scale, px, ch, z, t, fids, feats, fts = zip(
+            self.createFeatures(0, 0.0), self.createFeatures(1, 1.0))
+        scale = scale[0]
+        fids = fids[0]
+        fts = fts[0]
+
+        a, m = pysliddb.updateDataset(self.conn, 'host', 'user', scale,
+                             iid, px, ch, z, t, fids, feats, fts, did=None)
+        self.assertTrue(a)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
+        self.assertTrue(a)
+
+        with open(r) as f:
+            d = pickle.load(f)
+        self.assertEqual(d.keys(), [0.5])
+        self.assertEqual(len(d[0.5]), 2)
+        d0 = d[0.5][0]
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+        self.assertEqual(d0[6:11], [iid[0], px[0], ch[0], z[0], t[0]])
+        self.assertTrue(all(array(d0[11:]) == feats[0]))
+
+        d1 = d[0.5][1]
+        self.assertEqual(len(d1), 13)
+        self.assertEqual(d1[0:3], [2, 'host', 'user'])
+        self.assertTrue(d1[3].startswith('host/'))
+        self.assertTrue(d1[4].startswith('host/'))
+        self.assertTrue(d1[5].startswith('host/'))
+        self.assertEqual(d1[6:11], [iid[1], px[1], ch[1], z[1], t[1]])
+        self.assertTrue(all(array(d1[11:]) == feats[1]))
 
     def test_chunks(self):
         l = range(5)
