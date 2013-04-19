@@ -532,7 +532,7 @@ class TestDatabaseDirect(ClientHelper):
         d, m = pysliddb.retrieve(self.conn, self.fake_ftset, did=None)
         self.assertEqual(d, [1, 2, 3])
 
-    def test_retrieve(self):
+    def test_retrieve_did(self):
         tag = self.createNameTag(did=self.fake_did)
         self.saveAndLinkTag(tag)
         p = self.createFileFromNameTag(tag)
