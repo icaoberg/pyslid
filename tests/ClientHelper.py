@@ -74,7 +74,7 @@ class ClientHelper(unittest.TestCase):
         return iid
 
     def createImageWithRes(self, sizeX=10, sizeY=10):
-        iid = self.createImage()
+        iid = self.createImage(sizeX, sizeY)
         p = self.conn.getObject('Image', iid).getPrimaryPixels()
         p.setPhysicalSizeX(omero.rtypes.rdouble(10))
         p.setPhysicalSizeY(omero.rtypes.rdouble(20))
