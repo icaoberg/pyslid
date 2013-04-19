@@ -692,3 +692,72 @@ def processOMESearchSet(contentDB,image_refs_dict,dscale):
              return []
 
      return goodSet_pos
+
+
+def removeDuplicates(conn, scale, featureset, did=None):
+    """
+    Remove duplicate entries in a content DB. The most recent of any duplicate
+    entries is kept, but the overall ordering of entries is unspecified.
+    @param conn (Blitzgateway)
+    @param scale (image feature scale parameter)
+    @param featureset (featureset name)
+    @param did (Dataset ID. If did is specified, this function will retrieve
+    the particular DB that is attached to the dataset. Otherwise it will
+    retrieve the general DB that includes all datasets.
+    @return answer (True if it is successfuly saved)
+    @return Message (Error Message)
+    """
+
+    # check the existence of the DB with DBfilename
+    answer, result = has(conn, featureset, did)
+
+    if answer is False:
+        Message = "There is no table for the featureset"
+        return False, Message
+
+    # result is the absolute path of the DB file
+    pkl_file = open(result, 'rb')
+    Data = pickle.load(pkl_file)
+    pkl_file.close()
+
+    if scale not in Data:
+        Message = "No entries for the request scale"
+        return False, Message
+
+
+    # 1. get the DB file name and tag
+    DBfilename_old, DBfilename_new, tag = getRecentName(conn, featureset, did)
+
+    # 2. Remove duplicates, keeping the latest
+    uniqueRows = {}
+    for d in Data[scale]:
+        # 0:IND 1:server 2:username 3:metadata 4:image 5:render,
+        #   6:iid 7:pixels 8:channel 9:zslice 10:timepoint 11:features ....
+        k = tuple([d[1]] + d[4:11])
+        uniqueRows[k] = d
+
+    # Should be unique, so order doesn't matter
+    uniqueData = uniqueRows.values()
+    for n in xrange(len(uniqueData)):
+        uniqueData[n][0] = n + 1
+
+    Data[scale] = uniqueData
+
+    # 3. save it with the new DB file name
+    fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
+    output = open(fullpath, 'wb')
+    pickle.dump(Data, output)
+    output.close()
+
+    # 4. update the tag with a new file name
+    Answer = updateNameTag(conn, tag, DBfilename_new)
+
+    # 5. delete the previous one
+    try:
+        os.remove(result)
+    except:
+        return False, "Couldn't remove the previous contentDB file"
+
+    Message = "Good"
+    return True, Message
+

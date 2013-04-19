@@ -579,6 +579,91 @@ class TestDatabaseDirect(ClientHelper):
         self.assertEqual(r[0], ['2.0.0.0.0', 1, [1.0, 1.0]])
 
 
+    def test_removeDuplicates(self):
+        iid, scale, px, ch, z, t, fids, feats, fts = zip(
+            self.createFeatures(0, 0.0),
+            self.createFeatures(1, 1.0),
+            self.createFeatures(0, 2.0))
+        iid = (iid[0], iid[1], iid[0])
+        scale = scale[0]
+        fids = fids[0]
+        fts = fts[0]
+
+        a, m = pysliddb.updateDataset(self.conn, 'host', 'user', scale,
+                             iid, px, ch, z, t, fids, feats, fts, did=None)
+        self.assertTrue(a)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
+        self.assertTrue(a)
+
+        with open(r) as f:
+            d = pickle.load(f)
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
+        self.assertEqual(len(d[0.5]), 3)
+
+        d0 = d[0.5][0]
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+        self.assertEqual(d0[6:11], [iid[0], px[0], ch[0], z[0], t[0]])
+        self.assertTrue(all(array(d0[11:]) == feats[0]))
+
+        d1 = d[0.5][1]
+        self.assertEqual(len(d1), 13)
+        self.assertEqual(d1[0:3], [2, 'host', 'user'])
+        self.assertTrue(d1[3].startswith('host/'))
+        self.assertTrue(d1[4].startswith('host/'))
+        self.assertTrue(d1[5].startswith('host/'))
+        self.assertEqual(d1[6:11], [iid[1], px[1], ch[1], z[1], t[1]])
+        self.assertTrue(all(array(d1[11:]) == feats[1]))
+
+        d2 = d[0.5][2]
+        self.assertEqual(len(d2), 13)
+        self.assertEqual(d2[0:3], [3, 'host', 'user'])
+        self.assertTrue(d2[3].startswith('host/'))
+        self.assertTrue(d2[4].startswith('host/'))
+        self.assertTrue(d2[5].startswith('host/'))
+        self.assertEqual(d2[6:11], [iid[2], px[2], ch[2], z[2], t[2]])
+        self.assertTrue(all(array(d2[11:]) == feats[2]))
+
+        a, r = pysliddb.removeDuplicates(self.conn, scale, fts, did=None)
+        self.assertTrue(a)
+        a, r = pysliddb.has(self.conn, self.fake_ftset, did=None)
+        self.assertTrue(a)
+
+        with open(r) as f:
+            d = pickle.load(f)
+        self.assertEqual(sorted(d.keys()), sorted([0.5, 'info']))
+        self.assertEqual(len(d[0.5]), 2)
+
+        d0 = d[0.5][0]
+        d1 = d[0.5][1]
+
+        self.assertEqual(len(d0), 13)
+        self.assertEqual(d0[0:3], [1, 'host', 'user'])
+        self.assertTrue(d0[3].startswith('host/'))
+        self.assertTrue(d0[4].startswith('host/'))
+        self.assertTrue(d0[5].startswith('host/'))
+
+        self.assertEqual(len(d1), 13)
+        self.assertEqual(d1[0:3], [2, 'host', 'user'])
+        self.assertTrue(d1[3].startswith('host/'))
+        self.assertTrue(d1[4].startswith('host/'))
+        self.assertTrue(d1[5].startswith('host/'))
+
+        # Remember, ordering is not preserved
+        if d0[6] > d1[6]:
+            d1, d0 = d0, d1
+
+        self.assertEqual(d0[6:11], [iid[2], px[2], ch[2], z[2], t[2]])
+        self.assertTrue(all(array(d0[11:]) == feats[2]))
+
+        self.assertEqual(d1[6:11], [iid[1], px[1], ch[1], z[1], t[1]])
+        self.assertTrue(all(array(d1[11:]) == feats[1]))
+
+
+
 
 
 if __name__ == '__main__':
