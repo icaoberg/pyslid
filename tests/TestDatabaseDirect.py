@@ -52,9 +52,7 @@ class TestDatabaseDirect(ClientHelper):
         self.tempdir = tempfile.mkdtemp(prefix='omero_searcher_content_db-')
 
         # Override the OMERO.searcher contentdb path
-        os.environ['OMERO_CONTENTDB_PATH'] = self.tempdir + os.sep
-        pysliddb.OMERO_CONTENTDB_PATH = os.environ['OMERO_CONTENTDB_PATH']
-        #print 'OMERO_CONTENTDB_PATH changed to: %s' % self.tempdir
+        pysliddb.set_contentdb_path(self.tempdir)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -163,6 +161,16 @@ class TestDatabaseDirect(ClientHelper):
 
         return iid, scale, px, ch, z, t, fids, feats, self.fake_ftset
 
+
+    def test_set_contentdb_path(self):
+        tempdir = tempfile.mkdtemp(prefix='omero_searcher_content_db-')
+        pysliddb.set_contentdb_path(tempdir)
+        self.assertEqual(pysliddb.OMERO_CONTENTDB_PATH,
+                         os.path.join(tempdir, ''))
+        os.rmdir(tempdir)
+
+        nonexistent = os.path.join(tempdir, 'non', 'existent')
+        self.assertRaises(Exception, pysliddb.set_contentdb_path, nonexistent)
 
     def test_initializeNameTag(self):
         g = self.conn.getObject('ExperimenterGroup', self.gid)

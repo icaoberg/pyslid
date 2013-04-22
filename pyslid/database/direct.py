@@ -42,9 +42,23 @@ from os.path import exists, join
 import os
 
 NUM_DIGIT_COUNT = 20
-OMERO_CONTENTDB_PATH = os.environ['OMERO_CONTENTDB_PATH']
-if not OMERO_CONTENTDB_PATH.endswith(os.sep):
-    OMERO_CONTENTDB_PATH = OMERO_CONTENTDB_PATH + os.sep
+OMERO_CONTENTDB_PATH = None
+
+def set_contentdb_path(contentdb_path):
+    """
+    Set the OMERO_CONTENTDB_PATH, used to store the ContentDB files
+    """
+    global OMERO_CONTENTDB_PATH
+
+    #if contentdb_path is None:
+    #    contentdb_path = os.environ['OMERO_CONTENTDB_PATH']
+    if not contentdb_path.endswith(os.sep):
+        contentdb_path += os.sep
+    if not os.path.isdir(contentdb_path):
+        # TODO: Raise PyslidException
+        raise Exception('Invalid ContentDB directory: %s', contentdb_path)
+
+    OMERO_CONTENTDB_PATH = contentdb_path
 
 def search_file(filename, search_path):
    """Given a search path, find file
