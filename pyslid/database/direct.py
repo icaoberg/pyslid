@@ -1,5 +1,5 @@
 """
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+Authors: Ivan E. Cao-Berg and Jennifer Bakal
 Created: February 22, 2012
 
 Copyright (C) 2012 Murphy Lab
@@ -9,6 +9,9 @@ Carnegie Mellon University
 
 May 4, 2012
 * J. Bakal Updated
+
+April 10, 2013
+* J. Bakal Included processOMEIDs and def processOMESearchSet methods
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -264,7 +267,7 @@ def deleteTableLink(conn, featureset, did=None):
         import os
         try:
             os.remove(result)
-            deleteNameTag(conn, featureset)
+            deleteNameTag(conn, featureset, did)
             return True
         except:
             return False
@@ -316,7 +319,7 @@ def initialize(conn, feature_ids, featureset, did=None):
         fullpath = OMERO_CONTENTDB_PATH + DBfilename
         output = open(fullpath, 'wb')
 
-        Data=[]
+        Data={'info': featureset}
         pickle.dump(Data, output)
         output.close()
             
@@ -390,12 +393,15 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
         return False
 
     
-def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+def update(conn, server, username, scale,
+           iid, pixels, channel, zslice, timepoint,
+           feature_ids, features, featureset, did=None):
     """
     Update the DB for a feature vector.
     @param conn (Blitzgateway)
     @param server (server name)
     @param username (user name)
+    @param scale (image feature scale parameter)
     @param iid (image id)
     @param pixels (pixels index)
     @param channel (channel index)
@@ -423,7 +429,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         Data = pickle.load(pkl_file)
         pkl_file.close()
 
-        num_data = len(Data)
+        if scale not in Data:
+            Data[scale] = []
+        num_data = len(Data[scale])
 
 
         # 1. get the DB file name and tag
@@ -436,7 +444,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
-        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
+        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid))
+        tup.append( str(server)+'/webclient/?show=image-' + str(iid))
+        tup.append( str(server)+'/webclient/img_detail/' + str(iid))
         tup.append( long(iid ) )
         tup.append( long(pixels) )
         tup.append( long(channel) ) 
@@ -445,7 +455,7 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         for j in range(9, len(feature_ids)+9):
            tup.append( float(features[j-9]) )
 
-        Data.append(tup)
+        Data[scale].append(tup)
 
         # 3. save it with the new DB file name
         fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
@@ -471,12 +481,15 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         return False, Message
     
 
-def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+def updateDataset(conn, server, username, scale,
+           iid, pixels, channel, zslice, timepoint,
+           feature_ids, features, featureset, did=None):
     """
     Update the DB for a feature vector array (for a dataset).
     @param conn (Blitzgateway)
     @param server (server name)
     @param username (user name)
+    @param scale (image feature scale parameter)
     @param iid (image id array)
     @param pixels (pixels index array)
     @param channel (channel index array)
@@ -504,7 +517,9 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
         Data = pickle.load(pkl_file)
         pkl_file.close()
 
-        num_data = len(Data)
+        if scale not in Data:
+            Data[scale] = []
+        num_data = len(Data[scale])
         
 
         # 1. get the DB file name and tag
@@ -520,6 +535,8 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
             tup.append( str(server) )
             tup.append( str(username) )
             tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
+            tup.append( str(server)+'/webclient/?show=image-' + str(iid[i]))
+            tup.append( str(server)+'/webclient/img_detail/' + str(iid[i]))
             tup.append( long(iid[i]) )   
             tup.append( long(pixels[i]) )
             tup.append( long(channel[i]) ) 
@@ -528,7 +545,7 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
             for j in range(9, len(feature_ids)+9):
                tup.append( float(features[i][j-9]) )
 
-            Data.append(tup)
+            Data[scale].append(tup)
 
         # 3. save it with the new DB file name
         fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
@@ -638,3 +655,40 @@ def retrieveRemote(conn_local, conn_remote, featureset, did=None):
 
     return data, Message
 
+def processOMEIDs(cdb_row):
+     '''
+     Process content database id
+     '''
+     
+     info=cdb_row[6:11]
+     ID = ''.join([str(tmp)+'.' for tmp in info])[:-1]
+     cdbID = [ID,cdb_row[2],cdb_row[1]] 
+     return cdbID
+     
+def processOMESearchSet(contentDB,image_refs_dict,dscale):
+     '''
+     Create dict with iids as keys and contentDB feature vector as value 
+     to use instead of retrieving features from omero (too slow)
+     '''
+     iid_contentDB_dict={}
+     for key in contentDB[dscale]:
+         iid_contentDB_dict[key[6]]=key
+
+     goodSet_pos = []
+     for ID in image_refs_dict:
+         items = ID.split('.')
+         iid = long(items[0])
+         pixels = long(items[1])
+         channel = long(items[2])
+         zslice = long(items[3])
+         timepoint = long(items[4])
+         rid=[]
+         field=True
+
+         if iid_contentDB_dict.has_key(iid):
+             feats=iid_contentDB_dict[iid][11:]
+             goodSet_pos.append([ID, 1, feats])
+         else:
+             return []
+
+     return goodSet_pos

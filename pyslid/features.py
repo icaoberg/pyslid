@@ -52,6 +52,18 @@ May 7, 2012
      if it fails at reading values from a table
 * I. Cao-Berg Fixed bug in features.unlink where it was still referencing the old API
 
+February 19, 2013
+* I. Cao-Berg Made changes to method to reflect changes to the OMERO API
+* I. Cao-Berg Included the import of scipy
+
+February 27, 2013
+* I. Cao-Berg Fixed small bug were method was returning None when successfully linking
+a table
+
+March 1, 2013
+* I. Cao-Berg Fixed small bug in calculate where the method was returning two values
+instead of three when a feature set name is unknown or unrecognized
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 2 of the License,
@@ -75,7 +87,8 @@ import omero, pyslic, pyslid.utilities, pyslid.image
 import omero.callbacks
 from omero.gateway import BlitzGateway
 import omero.util.script_utils as utils
-import numpy
+#icaoberg 16/02/2012
+import numpy, scipy
 
 def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     '''
@@ -170,11 +183,13 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
                 threshold = 10*1024;
 
             #check if image size is greater than threshold value
-            if image.getPixels(pixels).getSizeX().getValue() > threshold:
+            #icaoberg 19/02/2013
+            if image.getPixelSizeY() > threshold:
                 if debug:
                     print "Image size is greater than threshold value"
                 return [[],[],None]
-            elif image.getPixels(pixels).getSizeY().getValue() > threshold:
+            #icaoberg 19/02/2013
+            elif image.getPixelSizeY() > threshold:
                 if debug:
                     print "Image size is greater than threshold value"
                 return [[],[],None]
@@ -307,9 +322,11 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         except:
             return [[],[], None]
     else:
+        if debug:
+           print "Invalid feature set name"
         ids = []
         features = []
-        return [ids, features]
+        return [ids, features, None]
 		
 def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zslice=0, timepoint=0, threshold=None, overwrite=False, debug=False ):
     '''
@@ -703,6 +720,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
 
         table.addData(columns)
         table.close()
+        return True
     else:
         # create a new table and link it to the image
         if field==True:
