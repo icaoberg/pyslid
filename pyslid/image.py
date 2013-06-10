@@ -94,7 +94,7 @@ def getNomimalMagnification( conn, iid, debug=False ):
     query = conn.getQueryService()
 
     try:
-        result = query.findByQuery(string, params.page(0,1))
+        result = query.findByQuery(string, params.page(0,1), conn.SERVICE_OPTS)
     except:
         if debug:
             print "Unable to run query"
@@ -190,7 +190,8 @@ def getList( conn, debug=False ):
       me = conn.getAdminService().getEventContext().userId
       string = "select i.id from Image i where i.details.owner.id = :id"
       params = omero.sys.ParametersI().addId(me)
-      iids = omero.rtypes.unwrap(query.projection(string,params))
+      iids = omero.rtypes.unwrap(query.projection(
+              string, params, conn.SERVICE_OPTS))
       return iids 
    except:
       if debug:
