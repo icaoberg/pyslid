@@ -246,7 +246,8 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         img.scale=scale
 
         img.channels[ 'protein' ] = channels[0]
-        plane = pyslid.utilities.getPlane(conn,iid,zslice,channels[0],timepoint)
+        plane = pyslid.utilities.getPlane(
+            conn, iid, pixels, channels[0], zslice, timepoint)
         img.channeldata[ 'protein' ] = scipy.misc.imresize( plane, scale )
 
         img.loaded=True
@@ -276,7 +277,8 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
 
         for channel in channels:
             img.channels[ labels[channel] ] = channel
-            plane = pyslid.utilities.getPlane(conn,iid,zslice,channel,timepoint)
+            plane = pyslid.utilities.getPlane(
+                conn, iid, pixels, channel, zslice, timepoint)
             img.channeldata[ labels[channel] ] = scipy.misc.imresize( plane, scale )
 
         img.loaded=True
@@ -306,7 +308,8 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
 
         for channel in channels:
             img.channels[ labels[channel] ] = channel
-            img.channeldata[ labels[channel] ] = pyslid.utilities.getPlane(conn,iid,zslice,channel,timepoint)
+            img.channeldata[ labels[channel] ] = pyslid.utilities.getPlane(
+                conn, iid, pixels, channel, zslice, timepoint)
 
         img.loaded=True
         ids = []
