@@ -227,7 +227,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
 
         try:
             features = pyslic.computefeatures(img,'field-dna+')
-            return [feature_ids[0:173], features, scale]
+            result [feature_ids[0:173], features, scale]
         except:
             print "Unable to calculate features"
             raise
@@ -251,7 +251,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
 
         try:
             features = pyslic.computefeatures(img,'field+')
-            return [ids, features, scale]
+            result = [ids, features, scale]
         except:
             print "Unable to calculate features"
             raise
@@ -280,7 +280,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
             for i in range(len(indices)):
                 ids.append( feature_ids[indices[i]-1] )
                 values.append( values[indices[i]-1] )
-            return [ids, values, scale]
+            result = [ids, values, scale]
         except:
             print "Unable to calculate features" 
             raise
@@ -308,12 +308,22 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
             for i in range(len(indices)):
                 ids.append( feature_ids[indices[i]-1] )
                 features.append( values[indices[i]-1] )
-            return [ids, features, scale]
+            result = [ids, features, scale]
         except:
             print "Unable to calculate features"
             raise
     else:
         raise PyslidException("Invalid feature set name")
+
+    # pyslic has a bug which can result in an incorrect number of features
+    # being returned
+    if len(result[0]) != len(result[1]):
+        raise PyslidException(
+            "Mismatch between featureids and feature values"
+            "\nfids:%s\nfeatures:%s" % (result[0], result[1]))
+
+    return result
+
 		
 def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zslice=0, timepoint=0, threshold=None, overwrite=False, debug=False ):
     '''
