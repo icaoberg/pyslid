@@ -95,6 +95,7 @@ def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     Returns the number of images in the dataset and the number of images that has the OMERO.tables attached.
 
     If the method is unable to connect to the OMERO.server, then the method will return None.
+
     If the method doesn't find an image associated with the given image id (iid), then the
     method will return None.
 
@@ -111,30 +112,34 @@ def getTableInfo(conn, did, set="slf33", field=True, debug=False ):
     '''
     
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return [None,None]
 
     if not pyslid.utilities.hasDataset( conn, did ):
-        if debug:
-            print "No dataset found with the given dataset id"
+        print "No dataset found with the given dataset id:" +  str(did)
         return [None,None]
 
     if not isinstance( field, bool ):
-        if debug:
-            print "Input parameter field must be a boolean"
+        print "Input parameter field must be a boolean"
         return [None,None]
 
+    #retrieve dataset
     ds = conn.getObject("Dataset", long(did))
+
+    #get all the images associated with the dataset    
     img_gen = ds.getChildLinks()
+
     num_image = 0
     num_image_table = 0
+
     for im in img_gen:
         num_image +=1
         iid = long(im.getId())
+
+        #check if image has a table attached
         [answer, result] = hasTable(conn, iid, set, field)
         if answer:
-            num_image_table +=1
+            num_image_table += 1
 
     return [num_image, num_image_table]
 
@@ -160,21 +165,18 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
     '''
    
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return [[],[],None]
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id:" + str(iid)
         return [[],[],None]
 
     #check input arguments
-    image = conn.getObject("Image", long(iid))
+    image = conn.getObject("Image", long(iid) )
 
     if image is None:
-        if debug:
-            print "Unable to retrieve image"
+        print "Unable to retrieve image with iid:" + str(iid)
         return [[],[],None]
     else:
         try:
@@ -185,13 +187,11 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
             #check if image size is greater than threshold value
             #icaoberg 19/02/2013
             if image.getPixelSizeY() > threshold:
-                if debug:
-                    print "Image size is greater than threshold value"
+                print "Image size is greater than threshold value"
                 return [[],[],None]
             #icaoberg 19/02/2013
             elif image.getPixelSizeY() > threshold:
-                if debug:
-                    print "Image size is greater than threshold value"
+                print "Image size is greater than threshold value"
                 return [[],[],None]
             else:
                 #set scale value
@@ -200,8 +200,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         except:
             #if no scale value is present, pyslic will set a scale value of .23
             #to avoid that we prevent feature calculation
-            if debug:
-                print "Unable to retrieve resolution of resolution was not set"
+            print "Unable to retrieve resolution or resolution was not set"
             return [[],[],None]
 
     #set resolution based on the scale
@@ -233,12 +232,11 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         features = []
 
         try:
-             features = pyslic.computefeatures(img,'field-dna+')
-             return [feature_ids[0:173], features, scale]
+            features = pyslic.computefeatures(img,'field-dna+')
+            return [feature_ids[0:173], features, scale]
         except:
-             if debug:
-                 print "Unable to calculate features"
-             return [[],[],None]
+            print "Unable to calculate features"
+            return [[],[],None]
     elif set=="slf33":
         #make pyslic image container
         img=pyslic.Image()
@@ -261,8 +259,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
             features = pyslic.computefeatures(img,'field+')
             return [ids, features, scale]
         except:
-            if debug:
-                print "Unable to calculate features"
+            print "Unable to calculate features"
             return [[],[],None]
     elif set=="slf36":
         #make pyslic image container
@@ -291,8 +288,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
                 values.append( values[indices[i]-1] )
             return [ids, values, scale]
         except:
-            if debug:
-               print "Unable to calculate features" 
+            print "Unable to calculate features" 
             return [[],[],None]
     elif set=="slf35":
         #make pyslic image container
@@ -322,11 +318,8 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         except:
             return [[],[], None]
     else:
-        if debug:
-           print "Invalid feature set name"
-        ids = []
-        features = []
-        return [ids, features, None]
+        print "Invalid feature set name"
+        return [[], [], None]
 		
 def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zslice=0, timepoint=0, threshold=None, overwrite=False, debug=False ):
     '''
@@ -355,58 +348,48 @@ def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zsli
     '''
 
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return False
     
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id"
         return False
 
     if not isinstance( set, str ):
-        if debug:
-            print "Input argument set must be a string"
+        print "Input argument set must be a string"
         return False
  
     if not isinstance( field, bool ):
-        if debug:
-            print "Input argument field must be a boolean"
+        print "Input argument field must be a boolean"
         return False
 
     if not isinstance( pixels, int ):
-        if debug:
-           print "Input argument pixels must be an integer"
+        print "Input argument pixels must be an integer"
         return False
 
     if not isinstance( zslice, int ):
-        if debug:
-           print "Input argument zslice must be an integer"
+        print "Input argument zslice must be an integer"
         return False
 
     if not isinstance( timepoint, int ):
-        if debug:
-           print "Input argument timepoint must be an integer"
+        print "Input argument timepoint must be an integer"
         return False
 
     if not isinstance( overwrite, bool ):
-        if debug:
-           print "Input argument overwrite must be a a boolean"
+        print "Input argument overwrite must be a a boolean"
         return False
             
     try:
         [fids, features, scale] = pyslid.features.calculate( conn, iid, scale, set, field, rid, pixels, channels, zslice, timepoint, threshold ) 
     except:
-        if debug:
-            print "Unable to calculate features"
+        print "Unable to calculate features"
         return False
 
     try:
         answer = pyslid.features.link( conn, iid, scale, fids, features, set, field, rid, pixels, channel, zslice, timepoint)
         return answer
     except:
-        if debug:
-            print "Unable to attach feature table to image"
+        print "Unable to attach feature table to image"
         return False
         
 def unlink( conn, iid, set="slf34", field=True, rid=None, debug=False ):
@@ -422,23 +405,19 @@ def unlink( conn, iid, set="slf34", field=True, rid=None, debug=False ):
     '''
 
     if not conn.isConnected():
-        if debug:
-           print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return False
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id"
         return False
 
     if not isinstance( set, str ):
-        if debug:
-            print "Input argument set must be a string"
+        print "Input argument set must be a string"
         return False
 
     if not isinstance( field, bool ):
-        if debug:
-            print "Input argument field must be a boolean"
+        print "Input argument field must be a boolean"
         return False
     
     fileID = pyslid.utilities.getFileID( conn, iid, set, field )
@@ -448,8 +427,7 @@ def unlink( conn, iid, set="slf34", field=True, rid=None, debug=False ):
         conn.deleteObjects("Annotation", [fileID], deleteChildren=True, deleteAnns=True)
         return True
     except:
-        if debug:
-           print "Unable to delete feature table"
+        print "Unable to delete feature table"
         return False
  
 def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, calculate=False, debug=False ):
@@ -473,13 +451,11 @@ def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixel
     #    return None
            
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id"
         return None
         
     if not isinstance( set, str ):
-        if debug:
-            print "Input argument set must be a string"
+        print "Input argument set must be a string"
         return None
         
     #features
@@ -570,23 +546,19 @@ def hasTable( conn, iid, featureset="slf33", field=True, rid=None, debug=False )
     '''
 
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return [False, None]
 
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id"
         return [False, None]
 
     if not isinstance( featureset, str ):
-        if debug:
-            print "Input argument feature set must be a string"
+        print "Input argument feature set must be a string"
         return [False, None]
 		
     if not isinstance( field, bool ):
-        if debug:
-            print "Input argument field must be boolean"
+        print "Input argument field must be boolean"
         return [False, None]
 
     if field == True:
@@ -652,56 +624,61 @@ def getIds( set="slf33", debug=False ):
     else:
 	return None
 		
-def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, channel=0,zslice=0, timepoint=0, debug=False):
+def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, debug=False):
     '''
     Creates a table from the feature vector and links the table to image with the 
-    given image id (iid). 
+    given image id (iid).  If the table exists, then it appends the feature vector to the table.
 
-    @param connection (conn)
-    @param image id (iid)
-    @param features ids (fids)
-    @param features (features) 
-    @param image resolution (scale)
-    @param field (field) true if field features, false otherwise
-    @param region id (rid) must be non-empty if field is False
-    @param pixels index (pixels)
-    @param channel index (channel)
-    @param zslice index (zslice)
-    @param timepoint index (timepoint)
-    @return true if feature table was linked, false otherwise
+    @param conn OMERO.server connection
+    @param iid OMERO image id
+    @param scale scale at which the features have been calculated
+    @param fids feature names or features ids
+    @param features image features
+    @param set feature set name
+    @param field if true, then check for field features. if false, then check for roi features
+    @param rid region id/roi id
+    @param pixels pixel index
+    @param channel channel index
+    @param zslice zslice index
+    @param timepoint timepoint index
+    @param debug debug flag
+    @return true if feature vector is found, false otherwise
     '''
      
+    if not conn.isConnected():
+        print "Unable to connect to OMERO.server"
+        return False
+
     if not pyslid.utilities.hasImage( conn, iid ):
-        if debug:
-            print "No image found with the given image id"
+        print "No image found with the given image id:" + str(iid)
         return False
 	
     # check if image exist
-    image = conn.getObject("Image", long(iid))
+    image = conn.getObject( "Image", long(iid) )
     if image is None:
-        if debug:
-            print "Unable to retrieve image"
+        print "Unable to retrieve image with id:" + str(iid)
         return False
 
     # generate a row-worth data in the OMERO.tables format
+
+    #if the feature ids/names is empty, generate a list feature name given by their index in list
     if not fids:
         fids = []
         for i in range(len(features)):
-            fids.append(str(i))
-        
+            fids.append( "feature" + str(i) )
+    
     columns = []
     columns.append(omero.grid.LongColumn( 'pixels', 'Pixel Index', [] ))
     columns.append(omero.grid.LongColumn( 'channel', 'Channel Index', [] ))
     columns.append(omero.grid.LongColumn( 'zslice', 'zSlice Index', [] ))
     columns.append(omero.grid.LongColumn( 'timepoint', 'Time Point Index', [] ))
-    #icaoberg april 20, 2012
     columns.append(omero.grid.DoubleColumn( 'scale', 'Scale', [] ))
 
     for fid in fids:
         columns.append(omero.grid.DoubleColumn( str(fid), str(fid), [] ))
 	
     # if there is already a feature table attached to the image, this will add the features row to the table
-    [answer, result] = hasTable(conn, iid, set, field)
+    [answer, result] = hasTable( conn, iid, set, field )
 	
     if answer:
         fid = result.getId().getValue()
@@ -742,8 +719,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
             flink.link( omero.model.ImageI(iid, False), annotation )
             conn.getUpdateService().saveObject(flink)
         except:
-            if debug:
-                print "Unable to create file annotation link"
+            print "Unable to create file annotation link"
             table.close()
             return False
 
@@ -760,8 +736,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
         try:
             table.addData( columns )
         except:
-            if debug:
-               print "Unable to add data to the table"
+            print "Unable to add data to the table"
             table.close()
             return False
 
@@ -781,8 +756,7 @@ def calculateOnDataset( conn, did, set="slf33", field=True, debug=False):
     '''
 	
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return [0,0]
 		
     if not pyslid.utilities.hasDataset( conn, did ):
@@ -825,7 +799,8 @@ def calculateOnDataset( conn, did, set="slf33", field=True, debug=False):
 
     return [num_image, num_image_calculate]
 
-def delete(conn,iid,set="slf34",field=True):
+def delete( conn, iid, set="slf34", field=True ):
+    print "Unimplemented method. Features not removed."
     return False
 
 def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
@@ -833,30 +808,27 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
     Gets a list of unique scales in the feature table for an image given
     an image id (iid).
 
-    @param connection (conn)
-    @param image id (iid)
-    @param feature set name (set)
-    @param field flag
-    @param region id (rid)
-    @param debug flag (debug)
+    @param conn OMERO.server connection
+    @param iid OMERO image id
+    @param set feature set name
+    @param field if true, then check for field features. if false, then check for roi features
+    @param rid region id/roi id
+    @param debug debug flag
     @return list of scales
     '''
    
     if not conn.isConnected():
-        if debug:
-            print "Unable to connect to OMERO.server"
+        print "Unable to connect to OMERO.server"
         return []
 
     try: 
         table = pyslid.features.get( conn, 'table', iid, 1, set, field )
     except:
-        if debug:
-           print "Unable to retrieve feature table"
+        print "Unable to retrieve feature table"
         return []
 
     if not table:
-        if debug:
-           print "Empty table. Nothing to return."
+        print "Empty table. Nothing to return."
         return []
     else:
         try:
@@ -871,11 +843,27 @@ def getScales( conn, iid, set="slf34", field=True, rid=None, debug=False ):
            scales = numpy.unique( scales )    
            return scales
         except:
-           if debug:
-               print "Empty table. Nothing to return."
+           print "Empty table. Nothing to return."
            return []
 
 def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, channel=0, zslice=0, timepoint=0, debug=False ):
+    '''
+    Helper method that returns true if a feature vector is found in the feature table.
+
+    @param conn OMERO.server connection
+    @param iid OMERO image id
+    @param scale scale at which the features have been calculated
+    @param set feature set name
+    @param field if true, then check for field features. if false, then check for roi features
+    @param rid region id/roi id
+    @param pixels pixel index
+    @param channel channel index
+    @param zslice zslice index
+    @param timepoint timepoint index
+    @param debug debug flag
+    @return true if feature vector is found, false otherwise
+    '''
+
     try:
         option = 'features'
         calculate = False
@@ -885,6 +873,5 @@ def has( conn, iid, scale=None, set="slf33", field=True, rid=None, pixels=0, cha
         else:
             return True
     except:
-        if debug:
-           print "Unable to retrieve features"
+        print "Unable to retrieve features"
         return False
