@@ -47,7 +47,7 @@ class TestImage(ClientHelper):
     def test_getScale(self):
         iid = self.createImageWithRes()
         s = image.getScale(self.conn, iid)
-        self.assertEqual(s, [0.25, 0.5, 0.75])
+        self.assertEqual(s, [10., 20., 30.])
 
     def test_imageWithoutResolution(self):
         iid = self.createImage()
