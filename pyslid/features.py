@@ -580,7 +580,7 @@ def hasTable( conn, iid, featureset="slf33", field=True, rid=None, debug=False )
     query = conn.getQueryService()
 	
     try:
-        result = query.findByQuery(string, params.page(0,1))
+        result = query.findByQuery(string, params.page(0,1), conn.SERVICE_OPTS)
     except:
 	result = None
 
