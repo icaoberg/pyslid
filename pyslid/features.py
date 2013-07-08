@@ -227,7 +227,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
 
         try:
             features = pyslic.computefeatures(img,'field-dna+')
-            result [feature_ids[0:173], features, scale]
+            result = [feature_ids[0:173], features, scale]
         except:
             print "Unable to calculate features"
             raise
