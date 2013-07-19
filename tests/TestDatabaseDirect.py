@@ -120,6 +120,7 @@ class TestDatabaseDirect(ClientHelper):
         params = omero.sys.ParametersI()
         params.addLong('gid', self.gid)
         r = self.conn.getQueryService().findAllByQuery(query_string, params)
+        self.assertIsNotNone(r)
         return r
 
     def countTags(self):
@@ -131,7 +132,7 @@ class TestDatabaseDirect(ClientHelper):
         ns, dbn = self.getNames()
         nsd, dbnd = self.getNames(self.fake_did)
         r = self.getGroupTags()
-        tn = 0 if r is None else len(r)
+        tn = len(r)
         tns = 0
         tnsd = 0
         for t in r:
@@ -170,7 +171,7 @@ class TestDatabaseDirect(ClientHelper):
 
         expectedns, expecteddbn = self.getNames()
         r = self.getGroupTags()
-        ntags0 = 0 if r is None else len(r)
+        ntags0 = len(r)
 
         # Non-dataset
         ns, dbname = pysliddb.initializeNameTag(self.conn, self.fake_ftset,
@@ -193,7 +194,7 @@ class TestDatabaseDirect(ClientHelper):
 
         expectedns, expecteddbn = self.getNames(self.fake_did)
         r = self.getGroupTags()
-        ntags0 = 0 if r is None else len(r)
+        ntags0 = len(r)
 
         ns, dbname = pysliddb.initializeNameTag(self.conn, self.fake_ftset,
                                                 did=self.fake_did)
