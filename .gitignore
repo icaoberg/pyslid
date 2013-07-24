@@ -1,2 +1,4 @@
 build
 *.sh
+dist
+pyslid.egg-info/
