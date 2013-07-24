@@ -148,10 +148,10 @@ def deleteNameTag(conn, featureset, did=None):
 
     #for ExperimeterGroupANnotationLink objects
     query_string = "select grl from ExperimenterGroupAnnotationLink as grl join grl.child as ann where grl.parent.id = :gid and ann.ns=:namesp"
-    results_link = query.findAllByQuery(query_string, params)
+    results_link = query.findAllByQuery(query_string, params, conn.SERVICE_OPTS)
     #for tagAnnotation
     query_string = "select ann from ExperimenterGroupAnnotationLink as grl join grl.child as ann where grl.parent.id = :gid and ann.ns=:namesp"
-    results_tag = query.findAllByQuery(query_string, params)
+    results_tag = query.findAllByQuery(query_string, params, conn.SERVICE_OPTS)
 
     try:
         for result in results_link:
@@ -193,7 +193,8 @@ def getRecentName(conn, featureset, did=None):
 
     # get the most recent Tag
     query_string = "select ann from ExperimenterGroupAnnotationLink as grl join grl.child as ann where grl.parent.id = :gid and ann.ns=:namesp order by ann.id desc"
-    result = query.findByQuery(query_string, params.page(0,1))
+    result = query.findByQuery(
+        query_string, params.page(0,1), conn.SERVICE_OPTS)
 
     if result is None:
         DBName = None
