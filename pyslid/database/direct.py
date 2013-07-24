@@ -42,7 +42,10 @@ from os.path import exists, join
 import os
 
 NUM_DIGIT_COUNT = 20
-OMERO_CONTENTDB_PATH = os.environ['OMERO_CONTENTDB_PATH']
+
+#icaoberg 7/24/2013
+#changed called to getenv so i can use a default value. not optimal, but works
+OMERO_CONTENTDB_PATH = os.getenv('OMERO_CONTENTDB_PATH', '/usr0/local/OMERO/omero.server/contentdbs')
 if not OMERO_CONTENTDB_PATH.endswith(os.sep):
     OMERO_CONTENTDB_PATH = OMERO_CONTENTDB_PATH + os.sep
 
@@ -267,7 +270,7 @@ def deleteTableLink(conn, featureset, did=None):
         import os
         try:
             os.remove(result)
-            deleteNameTag(conn, featureset)
+            deleteNameTag(conn, featureset, did)
             return True
         except:
             return False
@@ -319,7 +322,7 @@ def initialize(conn, feature_ids, featureset, did=None):
         fullpath = OMERO_CONTENTDB_PATH + DBfilename
         output = open(fullpath, 'wb')
 
-        Data=[]
+        Data={'info': featureset}
         pickle.dump(Data, output)
         output.close()
             
@@ -393,12 +396,15 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
         return False
 
     
-def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+def update(conn, server, username, scale,
+           iid, pixels, channel, zslice, timepoint,
+           feature_ids, features, featureset, did=None):
     """
     Update the DB for a feature vector.
     @param conn (Blitzgateway)
     @param server (server name)
     @param username (user name)
+    @param scale (image feature scale parameter)
     @param iid (image id)
     @param pixels (pixels index)
     @param channel (channel index)
@@ -426,7 +432,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         Data = pickle.load(pkl_file)
         pkl_file.close()
 
-        num_data = len(Data)
+        if scale not in Data:
+            Data[scale] = []
+        num_data = len(Data[scale])
 
 
         # 1. get the DB file name and tag
@@ -439,7 +447,9 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         tup.append( long(IND) )   #INDEX
         tup.append( str(server) )
         tup.append( str(username) )
-        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
+        tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid))
+        tup.append( str(server)+'/webclient/?show=image-' + str(iid))
+        tup.append( str(server)+'/webclient/img_detail/' + str(iid))
         tup.append( long(iid ) )
         tup.append( long(pixels) )
         tup.append( long(channel) ) 
@@ -448,7 +458,7 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         for j in range(9, len(feature_ids)+9):
            tup.append( float(features[j-9]) )
 
-        Data.append(tup)
+        Data[scale].append(tup)
 
         # 3. save it with the new DB file name
         fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
@@ -474,12 +484,15 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         return False, Message
     
 
-def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+def updateDataset(conn, server, username, scale,
+           iid, pixels, channel, zslice, timepoint,
+           feature_ids, features, featureset, did=None):
     """
     Update the DB for a feature vector array (for a dataset).
     @param conn (Blitzgateway)
     @param server (server name)
     @param username (user name)
+    @param scale (image feature scale parameter)
     @param iid (image id array)
     @param pixels (pixels index array)
     @param channel (channel index array)
@@ -507,7 +520,9 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
         Data = pickle.load(pkl_file)
         pkl_file.close()
 
-        num_data = len(Data)
+        if scale not in Data:
+            Data[scale] = []
+        num_data = len(Data[scale])
         
 
         # 1. get the DB file name and tag
@@ -523,6 +538,8 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
             tup.append( str(server) )
             tup.append( str(username) )
             tup.append( str(server)+'/webclient/metadata_details/image/'+str(iid[i]))
+            tup.append( str(server)+'/webclient/?show=image-' + str(iid[i]))
+            tup.append( str(server)+'/webclient/img_detail/' + str(iid[i]))
             tup.append( long(iid[i]) )   
             tup.append( long(pixels[i]) )
             tup.append( long(channel[i]) ) 
@@ -531,7 +548,7 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
             for j in range(9, len(feature_ids)+9):
                tup.append( float(features[i][j-9]) )
 
-            Data.append(tup)
+            Data[scale].append(tup)
 
         # 3. save it with the new DB file name
         fullpath = OMERO_CONTENTDB_PATH + DBfilename_new
