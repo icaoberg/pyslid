@@ -43,11 +43,21 @@ import os
 
 NUM_DIGIT_COUNT = 20
 
-#icaoberg 7/24/2013
-#changed called to getenv so i can use a default value. not optimal, but works
-OMERO_CONTENTDB_PATH = os.getenv('OMERO_CONTENTDB_PATH', '/usr0/local/OMERO/omero.server/contentdbs')
-if not OMERO_CONTENTDB_PATH.endswith(os.sep):
-    OMERO_CONTENTDB_PATH = OMERO_CONTENTDB_PATH + os.sep
+def set_contentdb_path(contentdb_path):
+    """
+    Set the OMERO_CONTENTDB_PATH, used to store the ContentDB files
+    """
+    global OMERO_CONTENTDB_PATH
+
+    #if contentdb_path is None:
+    #    contentdb_path = os.environ['OMERO_CONTENTDB_PATH']
+    if not contentdb_path.endswith(os.sep):
+        contentdb_path += os.sep
+    if not os.path.isdir(contentdb_path):
+        # TODO: Raise PyslidException
+        raise Exception('Invalid ContentDB directory: %s', contentdb_path)
+
+    OMERO_CONTENTDB_PATH = contentdb_path
 
 def search_file(filename, search_path):
    """Given a search path, find file
@@ -98,8 +108,6 @@ def initializeNameTag(conn, featureset, did=None):
     conn.getUpdateService().saveObject(flink)   # update the link
 
     return NameSpace, DBName
-
-
 
 def updateNameTag(conn, tag, DBName_new):
     """
