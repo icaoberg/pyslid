@@ -38,6 +38,7 @@ import tempfile
 from ClientHelper import ClientHelper
 
 from pyslid.database import direct as pysliddb
+from pyslid.utilities import PyslidException
 
 
 

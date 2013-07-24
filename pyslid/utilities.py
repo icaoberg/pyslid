@@ -32,6 +32,10 @@ import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
 
+
+class PyslidException(Exception):
+    pass
+
 def connect( server, port, username, password ): 
     '''
     Helper method that connects to an OMERO.searcher server.
