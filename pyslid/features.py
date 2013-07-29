@@ -149,6 +149,7 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
     For detailed outputs, set debug flag to True.
     
     :param conn: connection
+    :type conn: BlitzGateway connection
     :param iid: image id
     :type iid: long
     :param scale: image scale
@@ -352,6 +353,7 @@ def clink( conn, iid, scale=1, set="slf34", field=True, rid=None, pixels=0, zsli
     For detailed outputs, set debug flag to True.
 
     :param conn: connection
+    :type conn: BlitzGateway connection
     :param iid: image id
     :type iid: long
     :param scale: image scale
@@ -472,6 +474,7 @@ def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixel
     Returns a features vector given an image id (iid), pixels, channel, zslice, and timepoint
 
     :param conn: connection
+    :type conn: BlitzGateway connection
     :param iid: image id
     :param option: a valid option, can be table, features or vector
     :type option: string
