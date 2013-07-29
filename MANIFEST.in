@@ -1,0 +1,4 @@
+include VERSION
+include README
+include AUTHORS
+include LICENSE
