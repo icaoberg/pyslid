@@ -1,8 +1,5 @@
 '''
-'''
-
-'''
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: May 1, 2011
 
 Copyright (C) 2011-2013 Murphy Lab
@@ -10,25 +7,38 @@ Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
 
-April 19, 2012 
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
 
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
+
+For additional information visit http://murphylab.web.cmu.edu or
+send email to murphy@cmu.edu
+'''
+
+'''
+April 19, 2012 
 * I. Cao-Berg Modified features.calculate so that if no scale information is available for the image, then the method returns an empty array rather than using pyslic default scale of 0.23.
 
 April 20, 2012  
-
 * I. Cao-Berg Modified features.link so that now has an extra argument called scale and will link a feature record with this information 
-
 * I. Cao-Berg Added debug input argument to method features.link 
-
 * I. Cao-Berg Updated documentation on method features.link 
-
 * I. Cao-Berg Added debug flag to every method 
-
 * I. Cao-Berg Added unable to connect statement to all methods
 
 April 22, 2012
 * I. Cao-Berg Modified features.get so that now it will query a scale as well
-
 April 23, 2012
 * I. Cao-Berg Modified features.unlink to reflect the changes in the new OMERO API
 * J. Bakal Improved features.has by setting the results to None when answer is False.
@@ -66,13 +76,8 @@ a table
 March 1, 2013
 * I. Cao-Berg Fixed small bug in calculate where the method was returning two values instead of three when a feature set name is unknown or unrecognized
 
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-
-For additional information visit http://murphylab.web.cmu.edu or send email to murphy@cmu.edu
+July 29, 2013
+* I. Cao-Berg 
 '''
 
 import omero, pyslic, pyslid.utilities, pyslid.image

@@ -1,31 +1,11 @@
 '''
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: April 24, 2012
 
-Copyright (C) 2012 Murphy Lab
+Copyright (C) 2012-2013 Murphy Lab
 Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
-
-April 24, 2012
-* I. Cao-Berg Added getNominalMagnification method that queries OMERO and
-    tries to retrieve the nomimal magnification associated with an image.
-    If the result is empty, then it returns the DEFAULT_MAGNIFICATION
-* I. Cao-Berg Added getResolution method that gets the pixel size in [x,y,z]
-* I. Cao-Berg Added getScale method that calculate the image scale
-
-May 2, 2012
-* I. Cao-Berg Added method for retrieving a list of image ids for the current user
-
-try:
-   query = conn.getQueryService()
-   me = conn.getAdminService().getEventContext().userId
-   string = "select i.id from Image i where i.details.owner.id = :id"
-   params = omero.sys.ParametersI().addId(me)
-   iids = omero.rtypes.unwrap(query.projection(string,params))
-   return iids
-except:
-   return []
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -44,6 +24,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 For additional information visit http://murphylab.web.cmu.edu or
 send email to murphy@cmu.edu
+'''
+
+'''
+April 24, 2012
+* I. Cao-Berg Added getNominalMagnification method that queries OMERO and
+    tries to retrieve the nomimal magnification associated with an image.
+    If the result is empty, then it returns the DEFAULT_MAGNIFICATION
+* I. Cao-Berg Added getResolution method that gets the pixel size in [x,y,z]
+* I. Cao-Berg Added getScale method that calculate the image scale
+
+May 2, 2012
+* I. Cao-Berg Added method for retrieving a list of image ids for the current user
 '''
 
 import omero, pyslic, pyslid.utilities
@@ -66,10 +58,13 @@ def getNomimalMagnification( conn, iid, debug=False ):
 
     For detailed outputs, set debug flag to True.
 
-    @param connection
-    @param image id (iid)
-    @param debug
-    @return nominal magnification
+    :param conn:
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long 
+    :param debug: debug flag
+    :type debug: boolean
+    :rtype: nominal magnification
     '''
 
     DEFAULT_MAGNIFICATION = 40
@@ -112,10 +107,12 @@ def getResolution( conn, iid, debug=False ):
 
     For detailed outputs, set debug flag to True.
 
-    @param connection
-    @param image id (iid)
-    @param debug flag
-    @return resolution
+    :param conn:
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param debug: debug flag
+    :rtype: resolution
     '''
 
     if not conn.isConnected():
@@ -139,9 +136,13 @@ def getScale( conn, iid, debug=False ):
 
     For detailed outputs, set debug flag to True.
 
-    @param connection
-    @param image id (iid)
-    @param debug flag
+    :param conn:
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param debug: debug flag
+    :type debug: boolean
+    :rtype: image scale
     '''
 
     if not conn.isConnected():
@@ -160,21 +161,24 @@ def getScale( conn, iid, debug=False ):
     return scale
 
 def getList( conn, debug=False ):
-   '''
-   Returns a list of image ids (iids) from images owned by the user making the connection.
-   @param conn
-   @returns image ids (iids) list
-   '''
-   if not conn.isConnected():
-       raise PyslidException("Unable to connect to OMERO.server")
+    '''
+    Returns a list of image ids (iids) from images owned by the user making the connection.
 
-   try:
-      query = conn.getQueryService()
-      me = conn.getAdminService().getEventContext().userId
-      string = "select i.id from Image i where i.details.owner.id = :id"
-      params = omero.sys.ParametersI().addId(me)
-      iids = omero.rtypes.unwrap(query.projection(
+    :param conn:
+    :type conn: BlitzGateway connection
+    :rtype: list of image ids
+    '''
+   
+    if not conn.isConnected():
+        raise PyslidException("Unable to connect to OMERO.server")
+
+    try:
+        query = conn.getQueryService()
+        me = conn.getAdminService().getEventContext().userId
+        string = "select i.id from Image i where i.details.owner.id = :id"
+        params = omero.sys.ParametersI().addId(me)
+        iids = omero.rtypes.unwrap(query.projection(
               string, params, conn.SERVICE_OPTS))
-      return iids 
-   except:
-       raise PyslidException("Unable to run query")
+        return iids 
+    except:
+        raise PyslidException("Unable to run query")

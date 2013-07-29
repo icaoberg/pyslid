@@ -1,8 +1,8 @@
 '''
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: April 26, 2012
 
-Copyright (C) 2012 Murphy Lab
+Copyright (C) 2012-2013 Murphy Lab
 Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
@@ -42,12 +42,17 @@ def getInfo(conn, did, set="slf33", field=True, debug=False ):
 
     For detailed outputs, set debug flag to True.
 
-    @param connection (conn)
-    @param dataset id (did)
-    @param feature set name (set)
-    @param field true if field features, false otherwise
-    @return num_image number of images
-    @return num_image_table (number of image that has a attached table)
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param did: dataset id
+    :type did: long
+    :param set: feature set name
+    :type set: string
+    :param field: true if field features, false otherwise
+    :type field: boolean
+    :param debug: debug flag
+    :type debug: boolean
+    :rtype: number of images and the number of images that have an attached table
     '''
     
     if not conn.isConnected():
@@ -75,12 +80,18 @@ def getInfo(conn, did, set="slf33", field=True, debug=False ):
 def getFileID( conn, iid, set, field=True, debug=False ):
     '''
     Returns the file id (fid) of an attached feature table given an image id (iid) and a setname.
-    @param connection (conn)
-    @param image id (iid)
-    @param set
-    @param field
-    @return file id (fid)
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param set: feature set name
+    :type set: string
+    :param field: true if field features, false otherwise
+    :type field: boolean
+    :rtype: file id
     '''
+
     #check input parameters
     if not conn.isConnected():
         raise PyslidException("Unable to connect to OMERO.server")
@@ -119,4 +130,3 @@ def getFileID( conn, iid, set, field=True, debug=False ):
         raise PyslidException("Unable to retrieve query")
    
     return fid
- 

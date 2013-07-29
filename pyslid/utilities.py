@@ -1,9 +1,8 @@
 '''
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: May 1, 2011
-Last Update: May 16, 2011
 
-Copyright (C) 2011 Murphy Lab
+Copyright (C) 2011-2013 Murphy Lab
 Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
@@ -39,11 +38,16 @@ class PyslidException(Exception):
 def connect( server, port, username, password ): 
     '''
     Helper method that connects to an OMERO.searcher server.
-    @param server
-    @param port
-    @param username
-    @param password
-    @returns connection
+
+    :param server: server name
+    :type server: string
+    :param port: port
+    :type port: long
+    :param user: username
+    :type user: string
+    :param password: password
+    :type password: string
+    :rtype: BlitzGateway connection
     '''
     
     try:
@@ -56,51 +60,63 @@ def connect( server, port, username, password ):
 def getDataset( conn, did ):
     '''
     Returns a dataset with the given dataset id (did).
-    @param connection (conn)
-    @param dataset id (did)
-    @return dataset
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param did: dataset id
+    :type did: long
+    :rtype: dataset object
     '''
     
+    if not conn.isConnected():
+        raise PyslidException("Unable to connect to OMERO.server")
+
     try:
         dataset = conn.getObject("Dataset", long(did))
     except:
-        dataset = []
+        raise PyslidException("Unable to retrieve dataset")
 	
     return dataset	
 	
 def getScreen( conn, sid ):
     '''
     Returns a screen with the given screen id (sid).
-    @param connection (conn)
-    @param screen id (sid)
-    @return screen
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param sid: screen id
+    :type sid: long
+    :rtype: screen object
     '''
     
     if not conn.isConnected():
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     try:
         screen = conn.getObject("Screen", long(sid))
     except:
-        screen = None
+        raise PyslidException("Unable to retrieve screen")
 	
     return screen
 	
 def getPlate( conn, plid ):
     '''
     Returns a plate with the given plate id (plid).
-    @param connection (conn)
-    @param plate id (plid)
-    @return plate
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param plid: plate id
+    :type sid: long
+    :rtype: plate object
     '''
     
     if not conn.isConnected():
-        return None
+        raise PyslidException("Unable to connect to OMERO.server")
 
     try:
         plate = conn.getObject("Plate", long(plid))
     except:
-        plate = None
+        raise PyslidException("Unable to retrieve plate")
 
     return plate
     
@@ -111,22 +127,27 @@ def getFileID( conn, iid, set, field=True ):
 
     (DEPRECATED) This method has been replaced by table.getFileID
 
-    @param connection (conn)
-    @param image id (iid)
-    @param set
-    @param field
-    @return file id (fid)
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param set: feature set name
+    :type set: string
+    :param field: true if field features, false otherwise
+    :rtype: file id
     '''
 
-    #check input parameters
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )
+
     if not hasImage( conn, iid ):
-        return None
+        raise PyslidException( "Unable to find image with image id:" + str(iid) )
         
     if not isinstance( set, str ):
-        return None
+        raise PyslidException( "Input argument feature set name must be a string" )
         
     if not isinstance( field, bool ):
-        return None
+        raise PyslidException( "Input argument field must be boolean" )
 
     #create query service
     query = conn.getQueryService()
@@ -159,38 +180,51 @@ def getFileID( conn, iid, set, field=True ):
 def getImage( conn, iid ):
     '''
     Returns an image with the given image id (iid).
-    @param connection (conn)
-    @param image id (iid)
-    @return image
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :rtype: image object
     '''
 
-    if not conn.isConnected():
-       return None    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
+    if not hasImage( conn, iid ):
+        raise PyslidException( "Unable to find image with image id:" + str(iid) )
 
     try:
         image = conn.getObject( "Image", long(iid) )
     except:
-        image = None
+        raise PyslidException( "Unable to retrive image with image id:" + str(iid) )
 		
     return image 
         
 def getPlane( conn, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
     '''
     Returns a plane with the given image id (iid) as well as pixels, channels, zslice and timepoint index.
-    @param connection (conn)
-    @param image id (iid)
-    @param pixels index
-    @param channel index
-    @param zslice index
-    @param timepoint index
-    @return plane
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param pixels: pixel index
+    :type pixels: integer
+    :param channel: channel index
+    :type channel: integer
+    :param zslice: zslice index
+    :type zslice: integer
+    :param timepoint: timepoint index
+    :type timepoint: integer
+    :rtype: plane
     '''
 	
-    if not conn.isConnected():
-        return None
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 
     if not hasImage( conn, iid ):
-        return None
+        raise PyslidException( "Unable to find image with image id:" + str(iid) )
 	
     #create pixel service (needed to extract pixels from image object)
     rawPixelsStore = conn.createRawPixelsStore()
@@ -223,17 +257,20 @@ def getPlane( conn, iid, pixels=0, channel=0, zslice=0, timepoint=0 ):
 def getProject( conn, prid ):
     '''
     Returns a project with the given project id (prid).
-    @param connection (conn)
-    @param project id (prid)
-    @return project
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param prid: project id
+    :type prid: long
+    :rtype: project object
     '''
 
-    if not conn.isConnected():
-        return None    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 
     try:
         project = conn.getObject( "Project", long(prid) )
-    except:
+    except:   
         project = []
 	
     return project
@@ -246,8 +283,8 @@ def hasDataset( conn, did ):
     @return true if dataset exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 
     if not conn.getObject( "Dataset", long(did) ):
         return False
@@ -255,13 +292,19 @@ def hasDataset( conn, did ):
         return True
     
 def hasFile( conn, fid ):
-    """
+    '''
     Determines if there is a file annotation with file id (fid).
-    @params connection (conn) 
-    @params file id (fid)
-    @return true if there is a file annotation with file id (fid), false otherwise
-    """
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param fid: file id
+    :type fid: long
+    :rtype: true if file exists, false otherwise
+    '''
     
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
     #create query service
     query = conn.getQueryService()
     
@@ -285,15 +328,17 @@ def hasFile( conn, fid ):
     
 def hasImage( conn, iid ):
     '''
-    Determines if there is an image in the OMERO database with the given
-    image id (iid).
-    @params connection (conn)
-    @params image id (iid)
-    @return true if image exists, false otherwise
+    Determines if there is an image in the OMERO database with the given image id (iid).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param plid: plane id
+    :type plid: long
+    :rtype: true if plane exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
     
     if not conn.getObject( "Image", long(iid) ):
         return False
@@ -302,15 +347,17 @@ def hasImage( conn, iid ):
 		
 def hasPlate( conn, pid ):
     '''
-    Determines if there is an image in the OMERO database with the given
-    plate id (pid).
-    @params conn
-    @params plate id (pid)
-    @return true if plate exists, false otherwise
+    Determines if there is an image in the OMERO database with the given plate id (pid).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param pid: plate id
+    :type pid: long
+    :rtype: true if plate exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
     
     if not conn.getObject( "Plate", long(pid) ):
         return False
@@ -319,15 +366,17 @@ def hasPlate( conn, pid ):
     
 def hasPlane( conn, plid ):
     '''
-    Determines if there is a plane in the OMERO database with the given
-    plane id (pid).
-    @params conn
-    @params plane id (plid)
-    @return true if plane exists, false otherwise
+    Determines if there is a plane in the OMERO database with the given plane id (pid).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param plid: plane id
+    :type plid: long
+    :rtype: true if plane exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )       
 
     #create query service
     query = conn.getQueryService()
@@ -352,15 +401,17 @@ def hasPlane( conn, plid ):
     
 def hasProject( conn, prid ):
     '''
-    Determines if there is a project in the OMERO database with the given
-    project id (prid).
-    @params session
-    @params project id (prid)
-    @return true if project exists, false otherwise
+    Determines if there is a project in the OMERO database with the given project id (prid).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param prid: project id
+    :type prid: long
+    :rtype: true if project exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 	
     if not conn.getObject( "Project", long(prid) ):
         return False
@@ -369,17 +420,19 @@ def hasProject( conn, prid ):
     
 def hasScreen( conn, sid ):
     '''
-    Determines if there is a project in the OMERO database with the given
-    screen id (sid).
-    @params conn
-    @params screen id (sid)
-    @return true if screen exists, false otherwise
+    Determines if there is a project in the OMERO database with the given screen id (sid).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param sid: screen id
+    :type sid: long
+    :rtype: true if screen exists, false otherwise
     '''
 
-    if not conn.isConnected():
-        return False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 	
-    if not conn.getObject( "Scree", long(sid) ):
+    if not conn.getObject( "Screen", long(sid) ):
         return False
     else:
         return True
@@ -387,62 +440,80 @@ def hasScreen( conn, sid ):
 def createDataset( conn, name ):
     '''
     Create a dataset with the given name and returns the dataset id for that dataset.
-    @param session
-    @param name 
-    @return dataset id (did)
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param name: dataset name
+    :type name: string
+    :rtype: dataset id (did) for the new dataset
     '''
+
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 
     dataset = omero.model.DatasetI()
     dataset.name = omero.rtypes.rstring( name )
 
     try:
-        dataset = conn.getUpdateService().saveAndReturnObject(dataset)
+        dataset = conn.getUpdateService().saveAndReturnObject( dataset )
         did = dataset.id.val
     except:
+        raise PyslidException( "Unable to create dataset" )
         did = None
     
     return did
 
 def addImage2Dataset( conn, iid, did ):
-
-
     '''
-    Add an existing image to an existing dataset
-    @param connection (conn)
-    @param image id (iid)
-    @param dataset id (did)
-    @return true if image is added, false otherwise
+    Add an existing image to an existing dataset.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param did: dataset id
+    :type did: long
+    :rtype: true if successfully added image to dataset, false otherwise
     '''
     
+    answer = False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
     if not hasImage( conn, iid ):
-        return False
+        raise PyslidException( "Unable to find image with image id:" + str(iid) )
 
     if not hasDataset( conn, did ):
-        return False    
+        raise PyslidException( "Unable to find dataset with dataset id:" + str(did) ) 
 
     link = omero.model.DatasetImageLinkI()
     link.parent = omero.model.DatasetI(did, False)
     link.child = omero.model.ImageI(iid, False)
  
     try:
-       conn.getUpdateService().saveAndReturnObject(link)
-       return True
+        conn.getUpdateService().saveAndReturnObject(link)
+        answer = True
+        return answer
     except:
-       return False
+        raise PyslidException( "Unable to find image with image id:" + str(iid) )
+        return answer
 	   
 def getListOfImages( conn, did ):
     '''
-    Returns a list of image ids for a given dataset id (did).
-    @param connection (conn)
-    @param dataset id (did)
-    @return list of image ids
+    Returns a list of image ids (iids) from a given dataset id (did).
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param did: dataset id
+    :type did: long
+    :rtype: list of image ids
     '''
 	
-    if not conn.isConnected():
-        return None
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
 	   
     if not hasDataset( conn, did ):
-        return None
+        raise PyslidException( "Unable to find dataset with dataset id:" + str(did) )
 		
     try:
         dataset = conn.getObject("Dataset", long(did))
@@ -453,4 +524,5 @@ def getListOfImages( conn, did ):
      
         return iids
     except:
+        raise PyslidException( "Unable to retrieve list of image from dataset with dataset id:" + str(did) )
         return None 
