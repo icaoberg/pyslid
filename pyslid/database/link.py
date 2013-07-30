@@ -697,7 +697,7 @@ def retrieve( conn, featureset, did=None ):
     Also, this function splits the table-reading process for fast reading (from OMERO 4.3.3)
 
     :param conn: connection
-    :type conn BlitzGateway connection
+    :type conn: BlitzGateway connection
     :param featureset: feature set name
     :type featureset: string
     :param did: dataset id
