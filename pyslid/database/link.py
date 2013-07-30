@@ -1,8 +1,8 @@
-"""
-Authors: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
+'''
+Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: February 22, 2012
 
-Copyright (C) 2012 Murphy Lab
+Copyright (C) 2012-2013 Murphy Lab
 Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 For additional information visit http://murphylab.web.cmu.edu or
 send email to murphy@cmu.edu
-"""
+'''
 
 import omero
 from omero.gateway import BlitzGateway
@@ -35,15 +35,17 @@ import copy
 NUM_DIGIT_COUNT = 20
 
 def initializeNameTag(conn, featureset, did=None):
-    """
+    '''
     Initialize a tagAnnotation for image-content DB Name and link it to the ExperimenterGroup.
     
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return NameSpace
-    @return DBName
-    """
+    :param conn: connection
+    :type conn: Blitzgateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: NameSpace and DBName
+    '''
 
     COUNT = ''
     for i in range(NUM_DIGIT_COUNT-1):
@@ -72,17 +74,19 @@ def initializeNameTag(conn, featureset, did=None):
 
     return NameSpace, DBName
 
-def updateNameTag(conn, tag, DBName_new):
-    """
+def updateNameTag( conn, tag, DBName_new ):
+    '''
     Update the tag by updating DB Name. (Increase the number by 1)
     
-    @param conn (Blitzgateway)
-    @param tag (tagAnnotation object)
-    @param DBName_new (Old DBName)
-    @return Answer (True if successfully done)
-    """
+    :param conn: connection
+    :type conn: Blitzgateway connection
+    :param tag: tag
+    :type tag: tagAnnotation
+    :param DBName_new: database name
+    :type DBName_new: string
+    :rtype: true if successfully done, false otherwise
+    '''
     
-
     # change the DBName
     tag.setTextValue(omero.rtypes.RStringI(DBName_new))
     # update the tag
@@ -91,16 +95,19 @@ def updateNameTag(conn, tag, DBName_new):
     return True
 
 def deleteNameTag(conn, featureset, did=None):
-    """
+    '''
     Delete all tagAnnotations and links for image-content DB Name.
     Note that only the account who created the tag/link can delete them.
     
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return Answer (True if successfully done)
-    
-    """
+    :param conn: connection
+    :type conn: Blitzgateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: true if successfully done, false otherwise
+    '''
+
     #get the name of the active group to which the user belongs
     groupname = conn.getGroupFromContext().getName()
     groupid = conn.getGroupFromContext().getId()
@@ -134,18 +141,22 @@ def deleteNameTag(conn, featureset, did=None):
     except:
         return False
     
-def getRecentName(conn, featureset, did=None):
-    """
+def getRecentName( conn, featureset, did=None ):
+    '''
     Retreive the most recent public (entire) image-content DB file name for a specific featureset.
     This function retrieves the DB file name from a tagAnnotation in the ExperimenterGroup (Collaborative).
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return DBName (DB file name)
-    @return DBName_next (DB file name for the next round)
-    @return tag (tagAnnotation)
-    
-    """
+
+    :param conn: connection
+    :type conn: Blitzgateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype DBName: DB file name
+    :rtype DBName_next: DB file name for the next round
+    :rtype tag: tag annotation
+    '''
+
     #get the name of the active group to which the user belongs
     groupname = conn.getGroupFromContext().getName()
     groupid = conn.getGroupFromContext().getId()
@@ -187,15 +198,20 @@ def getRecentName(conn, featureset, did=None):
     
     return DBName, DBName_next, result
 
-def has(conn, featureset, did=None):
-    """
+def has( conn, featureset, did=None ):
+    '''
     Check if the DB object(HDF5 file) exists on OMERO server 
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return answer (True if it is successful)
-    @return result (Query result that points the newest DB)
-    """
+
+    :param conn: connection
+    :type conn: Blitzgateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype answer: true if it is successful, false otherwise
+    :rtype result: query result that points the newest DB
+    '''
+    
     answer = False        
 
     DBfilename, DBfilename_next, tag = getRecentName(conn, featureset, did)
