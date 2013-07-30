@@ -243,16 +243,19 @@ def has( conn, featureset, did=None ):
     
     return answer, result
 
-def deleteTableLink(conn, featureset, did=None):
-    """
+def deleteTableLink( conn, featureset, did=None ):
+    '''
     Delete all tables and links for image-content DB Name. (Also delete the tagAnnotation that contains the filename of the table)
     Note that only the account who created the table/link can delete them.
     
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return Answer (True if successfully done)
-    """
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: answer; true if successfully done, false otherwise
+    '''
 
     params = omero.sys.ParametersI()
     mimetype = 'OMERO.tables'
@@ -299,14 +302,15 @@ def deleteTableLink(conn, featureset, did=None):
     deleteNameTag(conn, featureset)
     return True        
 
-def createColumns(feature_ids):
+def createColumns( feature_ids ):
     '''
-    Create a List variable (Columns) for content DB.
+    Create a list variable (Columns) for content DB.
     Note that the first 6 columns are fixed as 'INDEX', 'iid', 'pixels', 'channel', 'zslice', 'timepoint'.
     Then the next columns are assigned by the input 'feature_ids'
     
-    @param feature_ids (Feature name array. The length of this argument should match with the number of features)
-    @return columns 
+    :param feature_ids: feature name array; the length of this argument should match with the number of features.
+    :type feature_ids: list of strings
+    :rtype: columns 
     '''
 
     columns = []
@@ -320,7 +324,7 @@ def createColumns(feature_ids):
     columns.append(omero.grid.LongColumn( 'timepoint', 'Time Point Index', [] ))
 
     for feat_id in feature_ids:
-        columns.append(omero.grid.DoubleColumn( str(feat_id), str(feat_id), [] ))
+        columns.append( omero.grid.DoubleColumn( str(feat_id), str(feat_id), [] ) )
 
     return columns
     
