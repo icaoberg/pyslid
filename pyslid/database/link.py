@@ -105,7 +105,7 @@ def deleteNameTag(conn, featureset, did=None):
     :type featureset: string
     :param did: dataset id
     :type did: long
-    :rtype: true if successfully done, false otherwise
+    :rtype: answer; true if successfully done, false otherwise
     '''
 
     #get the name of the active group to which the user belongs
@@ -152,9 +152,7 @@ def getRecentName( conn, featureset, did=None ):
     :type featureset: string
     :param did: dataset id
     :type did: long
-    :rtype DBName: DB file name
-    :rtype DBName_next: DB file name for the next round
-    :rtype tag: tag annotation
+    :rtype: [DBName, DBNAme_next, tag]; DB file name; DB file name for the next round and tag annotation
     '''
 
     #get the name of the active group to which the user belongs
@@ -208,10 +206,9 @@ def has( conn, featureset, did=None ):
     :type featureset: string
     :param did: dataset id
     :type did: long
-    :rtype answer: true if it is successful, false otherwise
-    :rtype result: query result that points the newest DB
+    :rtype: [answer, result]; true if it is successful, false otherwise. query result that points the newest DB
     '''
-    
+
     answer = False        
 
     DBfilename, DBfilename_next, tag = getRecentName(conn, featureset, did)
@@ -328,14 +325,19 @@ def createColumns(feature_ids):
     return columns
     
 def initialize(conn, feature_ids, featureset, did=None): 
-    """
+    '''
     Initialize a DB object(HDF5 file) onto OMERO server (without attaching to anything)
-    @param conn (Blitzgateway)
-    @param feature_ids (Feature name array. The length of this argument should match with the number of features)
-    @param featureset (Featureset name.)
-    @param did (Dataset ID. If did is specified, this function will initialize the partircular DB of the dataset. Otherwise it will be for all images)
-    @return answer (True if it is successful)
-    """
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param feature_ids: feature ids list
+    :type feature_ids: list of strings
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: answer; true if it is successful, false otherwise
+    '''
 
     # check the existence of the DB with DBfilename
     # if it exists, it will overwrite when overwrite flag is True. Otherwise it will do nothing
@@ -367,19 +369,28 @@ def initialize(conn, feature_ids, featureset, did=None):
     except:
         return False
     
-def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=True, did=None):
-    """
+def updatePerDataset(conn, server, username, dataset_id_list, 
+    featureset, field=True, did=None):
+    '''
     Update the DB for given dataset list. Firstly retrieve OMERO.tables from each image in the dataset and add the data onto the DB.
-    @param conn (Blitzgateway)
-    @param server (server name)
-    @param username (user name)
-    @param dataset_id_list (list of dataset ids)
-    @param featureset (featureset name)
-    @param field (True if the featureset is for field-level features)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return answer (True if it is successfuly saved)
-    @return Message (Error Message)
-    """ 
+    
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param server: server name
+    :type server: string
+    :param username: username
+    :type username: string
+    :param dataset_id_list: dataset id list
+    :type dataset_id_list: list of longs
+    :param featureset: feature set name
+    :type featureset: string
+    :param field: true if field features, false otherwise
+    :type field: boolean
+    :param did: dataset id
+    :type did: long
+    :rtype: [answer, message]; true if it is successfuly saved and error message
+    '''
+
     # check the existence of the DB with DBfilename
     answer, result = has(conn, featureset, did)
 
@@ -428,24 +439,37 @@ def updatePerDataset(conn, server, username, dataset_id_list, featureset, field=
     else:
         return False
  
-def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
-    """
+def update(conn, server, username, iid, pixels, 
+    channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
+    '''
     Update the DB for a feature vector.
-    @param conn (Blitzgateway)
-    @param server (server name)
-    @param username (user name)
-    @param iid (image id)
-    @param pixels (pixels index)
-    @param channel (channel index)
-    @param zslice (zslice index)
-    @param timepoint (timpoint index)
-    @param featre_ids (id list for features)
-    @param features (feature vector)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return answer (True if it is successfuly saved)
-    @return Message (Error Message)
-    """
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param server: server name
+    :type server: string
+    :param username: username
+    :type username: string
+    :param iid: image id
+    :type iid: long
+    :param pixels: pixel index
+    :type pixels: integer
+    :param channel: channel index
+    :type channel: integer
+    :param zslice: zslice index
+    :type zsclice: integer
+    :param timepoint: timepoint index
+    :type timepoint: integer
+    :param feature_ids: feature ids list
+    :type feature_ids: list of strings
+    :param features: feature vector
+    :type features: list of doubles
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: [answer, Message]; true if it is successfuly saved and error message
+    '''
 
     # check the existence of the DB with DBfilename
     answer, result = has(conn, featureset, did)
@@ -532,24 +556,36 @@ def update(conn, server, username, iid, pixels, channel, zslice, timepoint, feat
         Message = "There is no table for the featureset"
         return False, Message
 
-def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None): 
-    """
+def updateDataset( conn, server, username, iid, pixels, channel, zslice, timepoint, feature_ids, features, featureset, did=None ): 
+    '''
     Update the DB for a feature vector array (for a dataset).
-    @param conn (Blitzgateway)
-    @param server (server name)
-    @param username (user name)
-    @param iid (image id array)
-    @param pixels (pixels index array)
-    @param channel (channel index array)
-    @param zslice (zslice index array)
-    @param timepoint (timpoint index array)
-    @param feature_ids (id list for features)
-    @param features (feature vector array)
-    @param featureset (featureset name array)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets)
-    @return answer (True if it is successfuly saved)
-    @return Message (Error Message)
-    """
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param server: server name
+    :type server: string
+    :param username: username
+    :type username: string
+    :param iid: image id
+    :type iid: long
+    :param pixels: pixel index
+    :type pixels: integer
+    :param channel: channel index
+    :type channel: integer
+    :param zslice: zslice index
+    :type zslice: integer
+    :param timepoint: timepoint index
+    :type timepoint: integer
+    :param feature_ids: feature ids list
+    :type feature_ids: list of strings
+    :param features: feature vector
+    :type features: list of doubles
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: [answer, Message]; true if it is successfuly saved and error message
+    '''
 
     # check the existence of the DB with DBfilename
     answer, result = has(conn, featureset, did)
@@ -599,8 +635,6 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
 
             table2.addData(columns)
 
-            
-
             orig_file = table2.getOriginalFile()
             table2.close()
             table.close()
@@ -643,26 +677,31 @@ def updateDataset(conn, server, username, iid, pixels, channel, zslice, timepoin
         Message = "There is no table for the featureset"
         return False, Message
 
-def chunks(l, n):
+def chunks( l, n ):
     '''
 	Helper method.
+    :param l:
+    :param n:
+    :rtype: chunk
 	'''
     return [l[i:i+n] for i in range(0, len(l), n)]
 
-def retrieve(conn, featureset, did=None):
-    """
+def retrieve( conn, featureset, did=None ):
+    '''
     Retrieve a DB object(HDF5 file) from OMERO server
     This function is using omero.client object. Thus this function cannot be called from OMERO.web directly.
     Also, this function splits the table-reading process for fast reading (from OMERO 4.3.3)
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets
-    @return data (list of data lists) [ [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
+
+    :param conn: connection
+    :type conn BlitzGateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :rtype: [data, Message]; (list of data lists) [ [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
                                         [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
                                         [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
-                                        ...]
-    @return Message (Error Message)
-    """
+                                        ...] and error message
+    '''
     
     data = []
     answer, result = has(conn, featureset, did)
@@ -697,19 +736,24 @@ def retrieve(conn, featureset, did=None):
 
     return data, Message
 
-def retrieveRemote(conn_local, conn_remote, featureset, did=None):
-    """
+def retrieveRemote( conn_local, conn_remote, featureset, did=None ):
+    '''
     Retrieve a DB object(HDF5 file) from remote OMERO server
     Also, this function splits the table-reading process for fast reading (from OMERO 4.3.3)
-    @param conn (Blitzgateway)
-    @param featureset (featureset name)
-    @param did (Dataset ID. If did is specified, this function will retrieve the partircular DB that is attached to the dataset. Otherwise it will retrieve the general DB that includes all datasets
-    @return data (list of data lists) [ [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
+    
+    :param conn_local: local connection
+    :type conn_local: BlitzGateway connection
+    :param conn_remote: remote connection
+    :type conn_remote: BlitzGateway connection
+    :param featureset: feature set name
+    :type featureset: string
+    :param did: dataset id
+    :type did: long
+    :rtype: [data, message]; (list of data lists) [ [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
                                         [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
                                         [IND,server,username,iid,pixels,channel,zslice,timepoint,...],
-                                        ...]
-    @return Message (Error Message)
-    """
+                                        ...] and error message
+    '''
     
     data = []
     

@@ -134,6 +134,7 @@ def getFileID( conn, iid, set, field=True ):
     :param set: feature set name
     :type set: string
     :param field: true if field features, false otherwise
+    :type field: boolean
     :rtype: file id
     '''
 
@@ -278,9 +279,12 @@ def getProject( conn, prid ):
 def hasDataset( conn, did ):
     '''
     Determines if there is a dataset in the OMERO database with the given dataset id (did).
-    @params connection (conn)
-    @params dataset id (did)
-    @return true if dataset exists, false otherwise
+    
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param did: dataset id
+    :type did: long
+    :rtype: true if dataset exists, false otherwise
     '''
 
     if not conn.isConnected(): 
