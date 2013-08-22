@@ -195,8 +195,8 @@ class TestFeaturesSlf33(ClientHelper):
         self.real_ftset = 'slf33'
 
     def test_calculate(self):
-        iid = self.createImageWithRes()
-        print iid
+        iid = self.createImageWithRes(sizeX=256, sizeY=256)
+        #print iid
         scale = 1.0
         ch = [0]
         [ids, feats, scaleo] = features.calculate(
@@ -211,6 +211,38 @@ class TestFeaturesSlf33(ClientHelper):
 
         self.assertEqual(scaleo, scale)
 
+    def test_calculate_c(self):
+        iid1 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        ord2 = [2, 1, 0]
+        iid2 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3,
+                                       reorder=ord2)
+        #print iid1, iid2
+
+        scale = 1.0
+        z = 0
+        t = 0
+
+        ch1 = [0]
+        [ids1, feats1, scaleo1] = features.calculate(
+            self.conn, iid1, scale=scale, set=self.real_ftset, channels=ch1,
+            zslice=z, timepoint=t)
+
+        ch2 = [2]
+        [ids2, feats2, scaleo2] = features.calculate(
+            self.conn, iid2, scale=scale, set=self.real_ftset, channels=ch2,
+            zslice=z, timepoint=t)
+
+        self.assertEqual(len(feats1), 161)
+        self.assertFalse(any(numpy.isnan(feats1)))
+        self.assertFalse(any(numpy.isnan(feats2)))
+        self.assertEqual(ids1, ids2)
+
+        #print feats1-feats2
+        # TODO: if you uncomment the above line and run this test multiple
+        # times you may get slightly different values. Error in one of the
+        # dependencies?
+        self.assertTrue(numpy.allclose(feats1, feats2))
+
     def test_calculate_fail(self):
         """
         If an image of all 0s is given PySLIC seems to return an array of NaNs
@@ -218,7 +250,7 @@ class TestFeaturesSlf33(ClientHelper):
         This should be caught instead of returning invalid data to the caller.
         """
         iid = self.createImageWithRes(sizeX=1, sizeY=1)
-        print iid
+        #print iid
         scale = 1.0
         ch = [0]
 
@@ -243,8 +275,8 @@ class TestFeaturesSlf34(ClientHelper):
         self.real_ftset = 'slf34'
 
     def test_calculate(self):
-        iid = self.createImageWithRes(sizeC=3)
-        print iid
+        iid = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        #print iid
         scale = 1.0
         ch = [0, 2]
         [ids, feats, scaleo] = features.calculate(
@@ -259,6 +291,35 @@ class TestFeaturesSlf34(ClientHelper):
 
         self.assertEqual(scaleo, scale)
 
+    def test_calculate_c(self):
+        iid1 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        ord2 = [2, 1, 0]
+        iid2 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3,
+                                       reorder=ord2)
+        #print iid1, iid2
+
+        scale = 1.0
+        z = 0
+        t = 0
+
+        ch1 = [0, 1]
+        [ids1, feats1, scaleo1] = features.calculate(
+            self.conn, iid1, scale=scale, set=self.real_ftset, channels=ch1,
+            zslice=z, timepoint=t)
+
+        ch2 = [2, 1]
+        [ids2, feats2, scaleo2] = features.calculate(
+            self.conn, iid2, scale=scale, set=self.real_ftset, channels=ch2,
+            zslice=z, timepoint=t)
+
+        self.assertEqual(len(feats1), 173)
+        self.assertFalse(any(numpy.isnan(feats1)))
+        self.assertFalse(any(numpy.isnan(feats2)))
+        self.assertEqual(ids1, ids2)
+
+        #print feats1-feats2
+        self.assertTrue(numpy.allclose(feats1, feats2))
+
     def test_calculate_fail(self):
         """
         If an image of all 0s is given PySLIC seems to return an array of NaNs
@@ -266,7 +327,7 @@ class TestFeaturesSlf34(ClientHelper):
         This should be caught instead of returning invalid data to the caller.
         """
         iid = self.createImageWithRes(sizeX=1, sizeY=1)
-        print iid
+        #print iid
         scale = 1.0
         ch = [0]
 
