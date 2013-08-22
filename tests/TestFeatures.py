@@ -184,6 +184,7 @@ class TestFeatures(ClientHelper):
         self.assertFalse(b)
 
 
+
 class TestFeaturesSlf33(ClientHelper):
     """
     Do some basic tests of the SLF33 feature calculation
@@ -228,6 +229,54 @@ class TestFeaturesSlf33(ClientHelper):
     def test_getIds(self):
         ids = features.getIds(set=self.real_ftset)
         self.assertEqual(len(ids), 161)
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
+
+
+class TestFeaturesSlf34(ClientHelper):
+    """
+    Do some basic tests of the SLF34 feature calculation
+    """
+
+    def setUp(self):
+        super(TestFeaturesSlf34, self).setUp()
+        self.real_ftset = 'slf34'
+
+    def test_calculate(self):
+        iid = self.createImageWithRes(sizeC=3)
+        print iid
+        scale = 1.0
+        ch = [0, 2]
+        [ids, feats, scaleo] = features.calculate(
+            self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+        self.assertEqual(len(ids), 173)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
+        self.assertEqual(len(feats), len(ids))
+        self.assertFalse(any(numpy.isnan(feats)))
+
+        self.assertEqual(scaleo, scale)
+
+    def test_calculate_fail(self):
+        """
+        If an image of all 0s is given PySLIC seems to return an array of NaNs
+        which is shorter than the number of expected features (why?).
+        This should be caught instead of returning invalid data to the caller.
+        """
+        iid = self.createImageWithRes(sizeX=1, sizeY=1)
+        print iid
+        scale = 1.0
+        ch = [0]
+
+        with self.assertRaises(PyslidException):
+            [ids, feats, scaleo] = features.calculate(
+                self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+    def test_getIds(self):
+        ids = features.getIds(set=self.real_ftset)
+        self.assertEqual(len(ids), 173)
         self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
 
 
