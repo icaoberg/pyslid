@@ -50,7 +50,7 @@ class ClientHelper(unittest.TestCase):
         self.cli.closeSession()
 
 
-    def createImage(self, sizeX=10, sizeY=10):
+    def createImage(self, sizeX=10, sizeY=10, sizeZ=1, sizeC=1, sizeT=1):
         """
         Create an image from scratch
         http://www.openmicroscopy.org/site/support/omero4/developers/Python.html#create-image
@@ -59,10 +59,9 @@ class ClientHelper(unittest.TestCase):
 
         @return the image ID
         """
-        sizeZ, sizeC, sizeT = 1, 1, 1
-        plane1 = array([xrange(y, y + sizeX) for y in xrange(sizeY)],
-                       dtype=int8)
-        planes = [plane1]
+        planes = [array([xrange(y, y + sizeX) for y in xrange(sizeY)],
+                        dtype=int8) * (zct + 1)
+                  for zct in xrange(sizeZ * sizeC * sizeT)]
 
         def planeGen():
             for p in planes:
@@ -77,8 +76,8 @@ class ClientHelper(unittest.TestCase):
         print 'Created Image: %d' % iid
         return iid
 
-    def createImageWithRes(self, sizeX=10, sizeY=10):
-        iid = self.createImage(sizeX, sizeY)
+    def createImageWithRes(self, sizeX=10, sizeY=10, sizeZ=1, sizeC=1, sizeT=1):
+        iid = self.createImage(sizeX, sizeY, sizeZ, sizeC, sizeT)
         p = self.conn.getObject('Image', iid).getPrimaryPixels()
         p.setPhysicalSizeX(omero.rtypes.rdouble(10))
         p.setPhysicalSizeY(omero.rtypes.rdouble(20))
