@@ -325,6 +325,15 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         except:
             print "Unable to calculate features"
             raise
+    elif set=="min_max_mean":
+        if len(channels) != 1:
+            raise PyslidException("Expected 1 channel for featureset %s" % set)
+
+        plane = pyslid.utilities.getPlane(
+            conn, iid, pixels, channels[0], zslice, timepoint)
+        ids = getIds(set)
+        features = numpy.array([plane.min(), plane.max(), plane.mean()])
+        result = [ids, features, scale]
     else:
         raise PyslidException("Invalid feature set name")
 
@@ -682,6 +691,8 @@ def getIds( set="slf33", debug=False ):
         for i in range(len(indices)):
             ids.append( feature_ids[indices[i]-1] )
         return ids
+    elif set=="min_max_mean":
+        return ["min", "max", "mean"]
     else:
         print "Unrecognized feature set name: " + set
         return None
