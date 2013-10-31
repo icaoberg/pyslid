@@ -152,7 +152,9 @@ def getScale( conn, iid, debug=False ):
 
     try:
        resolution = pyslid.image.getResolution( conn, iid )
-       magnification = pyslid.image.getNomimalMagnification( conn, iid )
+       #magnification = pyslid.image.getNomimalMagnification( conn, iid )
+       magnification = 1.0
+       print 'Ignoring magnification, setting to %f' % magnification
        scale = [resolution[0]/magnification, resolution[1]/magnification, resolution[2]/magnification]
     except:
         raise PyslidException("Unable to calculate scale")
