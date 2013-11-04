@@ -59,6 +59,21 @@ def set_contentdb_path(contentdb_path):
 
     OMERO_CONTENTDB_PATH = contentdb_path
 
+
+def getCurrentGroupId(conn):
+    '''
+    Returns the current group ID, either from SERVICE_OPTS if set or from the
+    current context.
+    @param connection (conn)
+    @return the current group ID
+    '''
+    gid = conn.SERVICE_OPTS.getOmeroGroup()
+    if gid is not None:
+        gid = long(gid)
+    else:
+        gid = conn.getEventContext().groupId
+    return gid
+
 def search_file(filename, search_path):
    """Given a search path, find file
    """
@@ -85,7 +100,7 @@ def initializeNameTag(conn, featureset, did=None):
     for i in range(NUM_DIGIT_COUNT-1):
         COUNT +="0"
     COUNT +="1"
-    gid = conn.getGroupFromContext().getId()
+    gid = getCurrentGroupId(conn)
     
     if did == None: 
         NameSpace = 'direct.edu.cmu.cs.compbio.omepslid:'+'all'+'_'+str(featureset)
@@ -95,17 +110,20 @@ def initializeNameTag(conn, featureset, did=None):
         DBName = str(gid)+'_'+str(did)+'_'+str(featureset)+'_content_db_'+COUNT+'.pkl'
 
     #create an empty tag
-    tag = conn.getUpdateService().saveAndReturnObject(omero.model.TagAnnotationI())
+    tag = conn.getUpdateService().saveAndReturnObject(
+        omero.model.TagAnnotationI(), conn.SERVICE_OPTS)
     tag.setNs(omero.rtypes.RStringI(NameSpace))
     tag.setTextValue(omero.rtypes.RStringI(DBName))
-    tag=conn.getUpdateService().saveAndReturnObject(tag) # update the tag
+    tag = conn.getUpdateService().saveAndReturnObject(
+        tag, conn.SERVICE_OPTS) # update the tag
     
     flink = omero.model.ExperimenterGroupAnnotationLinkI()
     
 
     # link the tag to the ExperimentGroup
     flink.link(omero.model.ExperimenterGroupI(gid, False), tag)
-    conn.getUpdateService().saveObject(flink)   # update the link
+    conn.getUpdateService().saveObject(
+        flink, conn.SERVICE_OPTS)   # update the link
 
     return NameSpace, DBName
 
@@ -123,7 +141,7 @@ def updateNameTag(conn, tag, DBName_new):
     # change the DBName
     tag.setTextValue(omero.rtypes.RStringI(DBName_new))
     # update the tag
-    conn.getUpdateService().saveObject(tag)
+    conn.getUpdateService().saveObject(tag, conn.SERVICE_OPTS)
 
     return True
 
@@ -138,9 +156,7 @@ def deleteNameTag(conn, featureset, did=None):
     @return Answer (True if successfully done)
     
     """
-    #get the name of the active group to which the user belongs
-    groupname = conn.getGroupFromContext().getName()
-    groupid = conn.getGroupFromContext().getId()
+    groupid = getCurrentGroupId(conn)
     
     #create query service
     query = conn.getQueryService()
@@ -163,9 +179,9 @@ def deleteNameTag(conn, featureset, did=None):
 
     try:
         for result in results_link:
-            conn.getUpdateService().deleteObject(result)
+            conn.getUpdateService().deleteObject(result, conn.SERVICE_OPTS)
         for result in results_tag:
-            conn.getUpdateService().deleteObject(result)
+            conn.getUpdateService().deleteObject(result, conn.SERVICE_OPTS)
 
         return True
     except:
@@ -183,9 +199,7 @@ def getRecentName(conn, featureset, did=None):
     @return tag (tagAnnotation)
     
     """
-    #get the name of the active group to which the user belongs
-    groupname = conn.getGroupFromContext().getName()
-    groupid = conn.getGroupFromContext().getId()
+    groupid = getCurrentGroupId(conn)
     
     #create query service
     query = conn.getQueryService()

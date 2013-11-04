@@ -541,8 +541,9 @@ def get( conn, option, iid, scale=None, set="slf33", field=True, rid=None, pixel
         #returns the file id associated with the table
         fid = result.getId().getValue()
         #open the table given the file id
-        table = conn.getSharedResources().openTable( omero.model.OriginalFileI( fid, False ) )
-                
+        table = conn.getSharedResources().openTable(
+            omero.model.OriginalFileI(fid, False), conn.SERVICE_OPTS)
+
         if option == 'table':
             return table
 
@@ -774,7 +775,8 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
     if answer:
         fid = result.getId().getValue()
 
-        table = conn.getSharedResources().openTable( omero.model.OriginalFileI( fid, False ) )
+        table = conn.getSharedResources().openTable(
+            omero.model.OriginalFileI(fid, False), conn.SERVICE_OPTS)
 
         # append the new data
         columns[0].values.append( long(pixels) )
@@ -793,10 +795,14 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
         # create a new table and link it to the image
         if field==True:
             #table for field features
-            table = conn.getSharedResources().newTable( 1, 'iid-' + str(iid) + '_feature-' + str(set) + '_field.h5' )
+            table = conn.getSharedResources().newTable(
+                1, 'iid-' + str(iid) + '_feature-' + str(set) + '_field.h5',
+                conn.SERVICE_OPTS)
         else:
             #table for cell level features (roi == regions of interest)
-            table = conn.getSharedResources().newTable( 1, 'iid-' + str(iid) + '_feature-' + str(set) + '_roi.h5' )
+            table = conn.getSharedResources().newTable(
+                1, 'iid-' + str(iid) + '_feature-' + str(set) + '_roi.h5',
+                conn.SERVICE_OPTS)
         table.initialize(columns)
 
         try:
@@ -808,7 +814,7 @@ def link(conn, iid, scale, fids, features, set, field=True, rid=None, pixels=0, 
             annotation.file = table.getOriginalFile()
             #create an annotation link between image and table
             flink.link( omero.model.ImageI(iid, False), annotation )
-            conn.getUpdateService().saveObject(flink)
+            conn.getUpdateService().saveObject(flink, conn.SERVICE_OPTS)
         except:
             table.close()
             raise PyslidException("Unable to create file annotation link")

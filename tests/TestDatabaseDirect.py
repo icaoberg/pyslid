@@ -167,6 +167,13 @@ class TestDatabaseDirect(ClientHelper):
         return iid, scale, px, ch, z, t, fids, feats, self.fake_ftset
 
 
+    def test_getCurrentGroupId(self):
+        self.assertEqual(pysliddb.getCurrentGroupId(self.conn), self.gid)
+        # This group ID should never actually be used in an OMERO API call
+        newGid = sys.maxsize
+        self.conn.SERVICE_OPTS.setOmeroGroup(newGid)
+        self.assertEqual(pysliddb.getCurrentGroupId(self.conn), newGid)
+
     def test_set_contentdb_path(self):
         tempdir = tempfile.mkdtemp(prefix='omero_searcher_content_db-')
         pysliddb.set_contentdb_path(tempdir)
