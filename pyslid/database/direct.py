@@ -95,17 +95,20 @@ def initializeNameTag(conn, featureset, did=None):
         DBName = str(gid)+'_'+str(did)+'_'+str(featureset)+'_content_db_'+COUNT+'.pkl'
 
     #create an empty tag
-    tag = conn.getUpdateService().saveAndReturnObject(omero.model.TagAnnotationI())
+    tag = conn.getUpdateService().saveAndReturnObject(
+        omero.model.TagAnnotationI(), conn.SERVICE_OPTS)
     tag.setNs(omero.rtypes.RStringI(NameSpace))
     tag.setTextValue(omero.rtypes.RStringI(DBName))
-    tag=conn.getUpdateService().saveAndReturnObject(tag) # update the tag
+    tag = conn.getUpdateService().saveAndReturnObject(
+        tag, conn.SERVICE_OPTS) # update the tag
     
     flink = omero.model.ExperimenterGroupAnnotationLinkI()
     
 
     # link the tag to the ExperimentGroup
     flink.link(omero.model.ExperimenterGroupI(gid, False), tag)
-    conn.getUpdateService().saveObject(flink)   # update the link
+    conn.getUpdateService().saveObject(
+        flink, conn.SERVICE_OPTS)   # update the link
 
     return NameSpace, DBName
 
@@ -123,7 +126,7 @@ def updateNameTag(conn, tag, DBName_new):
     # change the DBName
     tag.setTextValue(omero.rtypes.RStringI(DBName_new))
     # update the tag
-    conn.getUpdateService().saveObject(tag)
+    conn.getUpdateService().saveObject(tag, conn.SERVICE_OPTS)
 
     return True
 
@@ -163,9 +166,9 @@ def deleteNameTag(conn, featureset, did=None):
 
     try:
         for result in results_link:
-            conn.getUpdateService().deleteObject(result)
+            conn.getUpdateService().deleteObject(result, conn.SERVICE_OPTS)
         for result in results_tag:
-            conn.getUpdateService().deleteObject(result)
+            conn.getUpdateService().deleteObject(result, conn.SERVICE_OPTS)
 
         return True
     except:
