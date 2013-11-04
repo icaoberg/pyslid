@@ -28,7 +28,7 @@ if sys.version_info < (2, 7):
 else:
     import unittest
 import omero
-from numpy import array, int8
+import numpy as np
 
 
 class ClientHelper(unittest.TestCase):
@@ -50,19 +50,54 @@ class ClientHelper(unittest.TestCase):
         self.cli.closeSession()
 
 
-    def createImage(self, sizeX=10, sizeY=10):
+    def checkerboard(self, dx, dy, nx, ny, wave=None):
+        """
+        Create a 2D array with a checkerboard pattern
+        dx, dy: The width and height of one square in the pattern
+        nx, ny: Width and Height of the image
+        wave: If given superimpose a sin wave with this period
+        """
+        t = np.vstack((
+                np.hstack(( np.zeros((dy, dx)), np.ones((dy, dx)) )),
+                np.hstack(( np.ones((dy, dx)), np.zeros((dy, dx)) ))
+                ))
+        im = np.tile(
+            t, (np.ceil(float(ny) / dy / 2), np.ceil(float(nx) / dx / 2)))
+        im = im[:ny, :nx]
+
+        if wave:
+            gridx = np.array([range(nx)] * ny)
+            gridy = np.array([range(ny)] * nx).transpose()
+            d = np.sqrt(np.power(gridx, 2) + np.power(gridy, 2))
+            im = im * (1 + np.sin(d * np.pi * 2 / wave)) * 64
+
+        return im
+
+
+    def createImage(self, sizeX=10, sizeY=10, sizeZ=1, sizeC=1, sizeT=1,
+                    reorder=None, check=True):
         """
         Create an image from scratch
         http://www.openmicroscopy.org/site/support/omero4/developers/Python.html#create-image
 
-        Note if images/pixel sizes are too small the feature calculation breaks
+        reorder: An optional list of indicies giving the order in which the
+        generated XY planes should be appended to form a multi Z/C/T image
 
         @return the image ID
         """
-        sizeZ, sizeC, sizeT = 1, 1, 1
-        plane1 = array([xrange(y, y + sizeX) for y in xrange(sizeY)],
-                       dtype=int8)
-        planes = [plane1]
+        if check:
+            d = max(max(sizeX, sizeY) / 16, 1)
+            planes = [
+                self.checkerboard(d * zct, d * zct, sizeX, sizeY, zct * 4 * d)
+                for zct in xrange(1, sizeZ * sizeC * sizeT + 1)]
+        else:
+            planes = [
+                np.array([xrange(y, y + sizeX) for y in xrange(sizeY)],
+                         dtype=np.int8) * (zct + 1)
+                for zct in xrange(sizeZ * sizeC * sizeT)]
+
+        if reorder:
+            planes = [planes[r] for r in reorder]
 
         def planeGen():
             for p in planes:
@@ -77,8 +112,10 @@ class ClientHelper(unittest.TestCase):
         print 'Created Image: %d' % iid
         return iid
 
-    def createImageWithRes(self, sizeX=10, sizeY=10):
-        iid = self.createImage(sizeX, sizeY)
+    def createImageWithRes(self, sizeX=10, sizeY=10, sizeZ=1, sizeC=1, sizeT=1,
+                           reorder=None, check=True):
+        iid = self.createImage(sizeX, sizeY, sizeZ, sizeC, sizeT,
+                               reorder, check)
         p = self.conn.getObject('Image', iid).getPrimaryPixels()
         p.setPhysicalSizeX(omero.rtypes.rdouble(10))
         p.setPhysicalSizeY(omero.rtypes.rdouble(20))

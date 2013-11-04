@@ -229,13 +229,14 @@ def calculate( conn, iid, scale=1, set="slf33", field=True, rid=None, pixels=0, 
         img.scale=scale
 		
         if len(channels) != 2:
-            channels = [ 0, 1 ]
+            raise PyslidException("Two channels required for slf34")
         labels = [ 'protein', 'dna' ] 
 
-        for channel in channels:
-            img.channels[ labels[channel] ] = channel
-            plane = pyslid.utilities.getPlane(conn,iid,pixels,channel,zslice,timepoint)
-            img.channeldata[ labels[channel] ] = scipy.misc.imresize(plane, scale)
+        for c in xrange(2):
+            img.channels[ labels[c] ] = channels[c]
+            plane = pyslid.utilities.getPlane(
+                conn, iid, pixels, channels[c], zslice, timepoint)
+            img.channeldata[ labels[c] ] = scipy.misc.imresize(plane, scale)
         
         img.loaded=True
         features = []

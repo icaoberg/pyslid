@@ -42,13 +42,12 @@ from pyslid.utilities import PyslidException
 
 class TestFeatures(ClientHelper):
     """
-    Test methods in pyslid.features
+    Test methods in pyslid.features using a fake featureset
     Only methods which appear to be useful are tested
     """
 
     def setUp(self):
         super(TestFeatures, self).setUp()
-        self.real_ftset = 'slf33'
         self.fake_ftset = 'test'
 
     def tableImageAnnotation(self, table, iid):
@@ -80,38 +79,6 @@ class TestFeatures(ClientHelper):
         self.assertEqual([c.values[0] for c in t.readCoordinates([0]).columns],
                          [123L, 0L, 5L, 41L, 0.5, 1.0, 2.0])
 
-
-    def test_calculate(self):
-        iid = self.createImageWithRes()
-        print iid
-        scale = 1.0
-        ch = [0]
-        [ids, feats, scaleo] = features.calculate(
-            self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
-
-        self.assertEqual(len(ids), 161)
-        self.assertEqual(len(ids), len(set(ids)))
-        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
-
-        self.assertEqual(len(feats), len(ids))
-        self.assertFalse(any(numpy.isnan(feats)))
-
-        self.assertEqual(scaleo, scale)
-
-    def test_calculate_fail(self):
-        """
-        If an image of all 0s is given PySLIC seems to return an array of NaNs
-        which is shorter than the number of expected features (why?).
-        This should be caught instead of returning invalid data to the caller.
-        """
-        iid = self.createImageWithRes(sizeX=1, sizeY=1)
-        print iid
-        scale = 1.0
-        ch = [0]
-
-        with self.assertRaises(PyslidException):
-            [ids, feats, scaleo] = features.calculate(
-                self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
 
     def test_get_table(self):
         # Testing features.get()
@@ -170,11 +137,6 @@ class TestFeatures(ClientHelper):
         self.assertIsNotNone(r)
         self.assertEqual(tid, r.getId())
 
-    def test_getIds(self):
-        ids = features.getIds(set=self.real_ftset)
-        self.assertEqual(len(ids), 161)
-        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
-
     def test_link(self):
         iid = self.createImageAndFeatures()
         im = self.conn.getObject('image', iid)
@@ -220,6 +182,164 @@ class TestFeatures(ClientHelper):
                          field=True, rid=None, pixels=123, channel=0,
                          zslice=4, timepoint=41)
         self.assertFalse(b)
+
+
+
+class TestFeaturesSlf33(ClientHelper):
+    """
+    Do some basic tests of the SLF33 feature calculation
+    """
+
+    def setUp(self):
+        super(TestFeaturesSlf33, self).setUp()
+        self.real_ftset = 'slf33'
+
+    def test_calculate(self):
+        iid = self.createImageWithRes(sizeX=256, sizeY=256)
+        #print iid
+        scale = 1.0
+        ch = [0]
+        [ids, feats, scaleo] = features.calculate(
+            self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+        self.assertEqual(len(ids), 161)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
+        self.assertEqual(len(feats), len(ids))
+        self.assertFalse(any(numpy.isnan(feats)))
+
+        self.assertEqual(scaleo, scale)
+
+    def test_calculate_c(self):
+        iid1 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        ord2 = [2, 1, 0]
+        iid2 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3,
+                                       reorder=ord2)
+        #print iid1, iid2
+
+        scale = 1.0
+        z = 0
+        t = 0
+
+        ch1 = [0]
+        [ids1, feats1, scaleo1] = features.calculate(
+            self.conn, iid1, scale=scale, set=self.real_ftset, channels=ch1,
+            zslice=z, timepoint=t)
+
+        ch2 = [2]
+        [ids2, feats2, scaleo2] = features.calculate(
+            self.conn, iid2, scale=scale, set=self.real_ftset, channels=ch2,
+            zslice=z, timepoint=t)
+
+        self.assertEqual(len(feats1), 161)
+        self.assertFalse(any(numpy.isnan(feats1)))
+        self.assertFalse(any(numpy.isnan(feats2)))
+        self.assertEqual(ids1, ids2)
+
+        #print feats1-feats2
+        # TODO: if you uncomment the above line and run this test multiple
+        # times you may get slightly different values. Error in one of the
+        # dependencies?
+        self.assertTrue(numpy.allclose(feats1, feats2))
+
+    def test_calculate_fail(self):
+        """
+        If an image of all 0s is given PySLIC seems to return an array of NaNs
+        which is shorter than the number of expected features (why?).
+        This should be caught instead of returning invalid data to the caller.
+        """
+        iid = self.createImageWithRes(sizeX=1, sizeY=1)
+        #print iid
+        scale = 1.0
+        ch = [0]
+
+        with self.assertRaises(PyslidException):
+            [ids, feats, scaleo] = features.calculate(
+                self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+    def test_getIds(self):
+        ids = features.getIds(set=self.real_ftset)
+        self.assertEqual(len(ids), 161)
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
+
+
+class TestFeaturesSlf34(ClientHelper):
+    """
+    Do some basic tests of the SLF34 feature calculation
+    """
+
+    def setUp(self):
+        super(TestFeaturesSlf34, self).setUp()
+        self.real_ftset = 'slf34'
+
+    def test_calculate(self):
+        iid = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        #print iid
+        scale = 1.0
+        ch = [0, 2]
+        [ids, feats, scaleo] = features.calculate(
+            self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+        self.assertEqual(len(ids), 173)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
+        self.assertEqual(len(feats), len(ids))
+        self.assertFalse(any(numpy.isnan(feats)))
+
+        self.assertEqual(scaleo, scale)
+
+    def test_calculate_c(self):
+        iid1 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3)
+        ord2 = [2, 1, 0]
+        iid2 = self.createImageWithRes(sizeX=256, sizeY=256, sizeC=3,
+                                       reorder=ord2)
+        #print iid1, iid2
+
+        scale = 1.0
+        z = 0
+        t = 0
+
+        ch1 = [0, 1]
+        [ids1, feats1, scaleo1] = features.calculate(
+            self.conn, iid1, scale=scale, set=self.real_ftset, channels=ch1,
+            zslice=z, timepoint=t)
+
+        ch2 = [2, 1]
+        [ids2, feats2, scaleo2] = features.calculate(
+            self.conn, iid2, scale=scale, set=self.real_ftset, channels=ch2,
+            zslice=z, timepoint=t)
+
+        self.assertEqual(len(feats1), 173)
+        self.assertFalse(any(numpy.isnan(feats1)))
+        self.assertFalse(any(numpy.isnan(feats2)))
+        self.assertEqual(ids1, ids2)
+
+        #print feats1-feats2
+        self.assertTrue(numpy.allclose(feats1, feats2))
+
+    def test_calculate_fail(self):
+        """
+        If an image of all 0s is given PySLIC seems to return an array of NaNs
+        which is shorter than the number of expected features (why?).
+        This should be caught instead of returning invalid data to the caller.
+        """
+        iid = self.createImageWithRes(sizeX=1, sizeY=1)
+        #print iid
+        scale = 1.0
+        ch = [0]
+
+        with self.assertRaises(PyslidException):
+            [ids, feats, scaleo] = features.calculate(
+                self.conn, iid, scale=scale, set=self.real_ftset, channels=ch)
+
+    def test_getIds(self):
+        ids = features.getIds(set=self.real_ftset)
+        self.assertEqual(len(ids), 173)
+        self.assertTrue(all([re.match('SLF\d\d\.\d+', i) for i in ids]))
+
 
 
 
