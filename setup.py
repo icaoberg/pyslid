@@ -1,6 +1,6 @@
 # Author: Ivan E. Cao-Berg (icaoberg@scs.cmu.edu)
 #
-# Copyright (C) 2011-2013 Murphy Lab
+# Copyright (C) 2011-2014 Murphy Lab
 # Lane Center for Computational Biology
 # School of Computer Science
 # Carnegie Mellon University
@@ -56,5 +56,3 @@ setup(name='pyslid',
         'pyslic==0.6.1',
         ],
 )
-
-
