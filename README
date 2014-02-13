@@ -1,27 +1,20 @@
-Protein Subcellular Location Image Database for Python
-======================================================
+pyslid for Python
+=================
 
-Pre-Requisites
-==============
--pyslic, numpy, scipy, mahotas, milk, matplotlib, libFreeImage, omero
+About
+-----
+pyslid is a python package that serves as a bridge between ricerca and the Open Microscopy Environment. 
 
-To install the prerequesites in Ubuntu, try
-#!/bin/bash
-sudo apt-get update
-sudo apt-get install setup-tools python-matplotlib
-sudo easy_install pip
-sudo pip install pyslic
+For more information about pyslid, please visit http://murphylab.web.cmu.edu/software/pyslid/
 
-This should install all the prerequisites except OMERO. This package assumes you
-have installed OMERO server in the system running PySLID.
+Authors
+-------
+| Ivan Cao-Berg, Baek Hwan Cho, Jennifer Bakal and Robert F. Murphy
+| Lane Center for Computational Biology
+| School of Computer Science
+| Carnegie Mellon University
+| http://lane.compbio.cmu.edu/
 
-For instructions on installing OMERO visit
-http://www.openmicroscopy.org/site/support/omero4/sysadmins/unix/server-installation.html
-
-For an updated helper script for installing the prerequisites visit
-https://gist.github.com/3940962
-
-Installation
-============
-Run
-> sudo python setup.py install
+References
+----------
+* B.H. Cho, I. Cao-Berg, J.A. Bakal, and R.F. Murphy (2012) OMERO.searcher: Content-based image search for microscope images. Nature Methods 9:633-634.
