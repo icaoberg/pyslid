@@ -3,7 +3,7 @@ pyslid for Python
 
 About
 -----
-pyslid is a python package that serves as a bridge between ricerca and the Open Microscopy Environment. 
+pyslid is a python package that calculates numerical feature sets to describe the subcellular patterns in fluorescence microscope images.  The features can be used for image content-based searching in the Open Microscopy Environment using ricerca and OMERO.searcher.
 
 For more information about pyslid, please visit http://murphylab.web.cmu.edu/software/pyslid/
 
