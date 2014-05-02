@@ -642,7 +642,7 @@ def getListOfDatasets( conn ):
         
     try:
         names = []
-        prids = []
+        dids = []
         # connect as above
         for project in conn.listProjects():
             for dataset in project.listChildren():
@@ -650,7 +650,6 @@ def getListOfDatasets( conn ):
                 dids.append(dataset.getId())
 
         return [dids, names]
-
     except:
         names = []
         dids = []
