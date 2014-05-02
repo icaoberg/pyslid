@@ -682,3 +682,51 @@ def getListOfAllImages( conn ):
         idds = []
         raise PyslidException( "Unable to retrieve list of images" )
         return iids
+
+def hasDatasetWithName( conn, name ):
+    '''
+    Determines if there is a dataset in the OMERO database with the 
+    given name.
+    
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param name: dataset name
+    :type name: string
+    :rtype: true if dataset exists, false otherwise
+    '''
+
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
+    try:
+        if not conn.getObject( "Dataset", attributes={'name': name } ):
+            return False
+        else:
+            return True
+    except:
+        print "Found more than one dataset with the matching name"
+        return True
+
+def hasProjectWithName( conn, name ):
+    '''
+    Determines if there is a project in the OMERO database with the 
+    given name.
+    
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param name: project name
+    :type name: string
+    :rtype: true if project exists, false otherwise
+    '''
+
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
+    try:
+        if not conn.getObject( "Project", attributes={'name': name } ):
+            return False
+        else:
+            return True
+    except:
+        print "Found more than one project with the matching name"
+        return True
