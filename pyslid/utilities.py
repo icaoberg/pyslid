@@ -589,7 +589,7 @@ def getListOfImages( conn, did ):
     try:
         dataset = conn.getObject("Dataset", long(did))
         links = dataset.getChildLinks()
-	iids = []
+        iids = []
         for image in links:
             iids.append(long(image.getId()))
      
@@ -655,3 +655,30 @@ def getListOfDatasets( conn ):
         dids = []
         raise PyslidException( "Unable to retrieve list of datasets" )
         return [dids, names] 
+
+def getListOfAllImages( conn ):
+    '''
+    Returns the list of all images ids (iids) associated with the current user.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :rtype: list of images ids
+    '''
+    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+        
+    try:
+        iids = []
+        # connect as above
+        for project in conn.listProjects():
+            for dataset in project.listChildren():
+                links = dataset.getChildLinks()
+                for image in links:
+                    iids.append(long(image.getId()))
+                     
+        return iids
+    except:
+        idds = []
+        raise PyslidException( "Unable to retrieve list of images" )
+        return iids
