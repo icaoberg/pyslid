@@ -486,7 +486,7 @@ def createProject( conn, name ):
 
     try:
         project = conn.getUpdateService().saveAndReturnObject( project )
-        project = project.id.val
+        prid = project.id.val
     except:
         raise PyslidException( "Unable to create project" )
         prid = None
