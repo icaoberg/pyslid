@@ -2,7 +2,7 @@
 Authors: Jennifer Bakal and Ivan E. Cao-Berg
 Created: May 1, 2011
 
-Copyright (C) 2011-2013 Murphy Lab
+Copyright (C) 2011-2014 Murphy Lab
 Lane Center for Computational Biology
 School of Computer Science
 Carnegie Mellon University
