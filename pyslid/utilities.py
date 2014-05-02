@@ -505,7 +505,10 @@ def addImage2Dataset( conn, iid, did ):
     :type did: long
     :rtype: true if successfully added image to dataset, false otherwise
     '''
-    
+
+    #@icaoberg
+    #technically, all i am doing is linking one object to the other
+
     answer = False
     if not conn.isConnected(): 
         raise PyslidException( "Unable to connect to OMERO.server" )   
@@ -525,7 +528,45 @@ def addImage2Dataset( conn, iid, did ):
         answer = True
         return answer
     except:
-        raise PyslidException( "Unable to find image with image id:" + str(iid) )
+        raise PyslidException( "Unable to link image " + str(iid) + " to dataset " + str(did) )
+        return answer
+
+def addDataset2Project( conn, did, prid ):
+    '''
+    Add an existing dataset to an existing project.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param did: dataset id
+    :type did: long
+    :param prid: project id
+    :type prid: long
+    :rtype: true if successfully added dataset to project, false otherwise
+    '''
+    
+    #@icaoberg
+    #technically, all i am doing is linking one object to the other
+
+    answer = False
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
+    if not hasDataset( conn, did ):
+        raise PyslidException( "Unable to find dataset with dataset id:" + str(did) )
+
+    if not hasProject( conn, prid ):
+        raise PyslidException( "Unable to find project with project id:" + str(prid) ) 
+
+    link = omero.model.ProjectDatasetLinkI()
+    link.parent = omero.model.ProjectI(prid, False)
+    link.child = omero.model.DatasetI(did, False)
+ 
+    try:
+        conn.getUpdateService().saveAndReturnObject(link)
+        answer = True
+        return answer
+    except:
+        raise PyslidException( "Unable to link dataset " + str(did) + " to project " + str(prid) )
         return answer
 	   
 def getListOfImages( conn, did ):
