@@ -441,7 +441,7 @@ def hasScreen( conn, sid ):
     else:
         return True
 	
-def createDataset( conn, name ):
+def createDataset( conn, name, force=False ):
     '''
     Create a dataset with the given name and returns the dataset id for that dataset.
 
@@ -453,7 +453,7 @@ def createDataset( conn, name ):
     '''
 
     if not conn.isConnected(): 
-        raise PyslidException( "Unable to connect to OMERO.server" )   
+        raise PyslidException( "Unable to connect to OMERO.server" )
 
     dataset = omero.model.DatasetI()
     dataset.name = omero.rtypes.rstring( name )
@@ -597,3 +597,33 @@ def getListOfImages( conn, did ):
     except:
         raise PyslidException( "Unable to retrieve list of image from dataset with dataset id:" + str(did) )
         return None 
+
+def getListOfProjects( conn ):
+    '''
+    Returns a list of project ids (prids) for the current user.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param prid: project id
+    :type prid: long
+    :rtype: list of project ids and names
+    '''
+    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+        
+    try:
+        names = []
+        prids = []
+        # connect as above
+        for project in conn.listProjects():
+            names.append(project.getName())
+            prids.getId(project.getId())
+
+        return [prids, names]
+
+    except:
+        names = []
+        prids = []
+        raise PyslidException( "Unable to retrieve list of projects )
+        return [prids, names] 
