@@ -467,6 +467,32 @@ def createDataset( conn, name ):
     
     return did
 
+def createProject( conn, name ):
+    '''
+    Create a project with the given name and returns the project id for that project.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param name: project name
+    :type name: string
+    :rtype: project id (prid) for the new dataset
+    '''
+
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+
+    project = omero.model.ProjectI()
+    project.name = omero.rtypes.rstring( name )
+
+    try:
+        project = conn.getUpdateService().saveAndReturnObject( project )
+        project = project.id.val
+    except:
+        raise PyslidException( "Unable to create project" )
+        prid = None
+    
+    return prid
+
 def addImage2Dataset( conn, iid, did ):
     '''
     Add an existing image to an existing dataset.
