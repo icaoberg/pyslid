@@ -625,5 +625,5 @@ def getListOfProjects( conn ):
     except:
         names = []
         prids = []
-        raise PyslidException( "Unable to retrieve list of projects )
+        raise PyslidException( "Unable to retrieve list of projects" )
         return [prids, names] 
