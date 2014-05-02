@@ -618,7 +618,7 @@ def getListOfProjects( conn ):
         # connect as above
         for project in conn.listProjects():
             names.append(project.getName())
-            prids.getId(project.getId())
+            prids.append(project.getId())
 
         return [prids, names]
 
