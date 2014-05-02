@@ -571,7 +571,7 @@ def addDataset2Project( conn, did, prid ):
 	   
 def getListOfImages( conn, did ):
     '''
-    Returns a list of image ids (iids) from a given dataset id (did).
+    Returns the list of image ids (iids) from a given dataset id (did).
 
     :param conn: connection
     :type conn: BlitzGateway connection
@@ -600,7 +600,7 @@ def getListOfImages( conn, did ):
 
 def getListOfProjects( conn ):
     '''
-    Returns a list of project ids (prids) for the current user.
+    Returns the list of project ids (prids) associated with the current user.
 
     :param conn: connection
     :type conn: BlitzGateway connection
@@ -627,3 +627,32 @@ def getListOfProjects( conn ):
         prids = []
         raise PyslidException( "Unable to retrieve list of projects" )
         return [prids, names] 
+
+def getListOfDatasets( conn ):
+    '''
+    Returns the list of dataset ids (dids) associated with the current user.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :rtype: list of dataset ids and names
+    '''
+    
+    if not conn.isConnected(): 
+        raise PyslidException( "Unable to connect to OMERO.server" )   
+        
+    try:
+        names = []
+        prids = []
+        # connect as above
+        for project in conn.listProjects():
+            for dataset in project.listChildren():
+                names.append(dataset.getName())
+                dids.append(dataset.getId())
+
+        return [dids, names]
+
+    except:
+        names = []
+        dids = []
+        raise PyslidException( "Unable to retrieve list of datasets" )
+        return [dids, names] 
