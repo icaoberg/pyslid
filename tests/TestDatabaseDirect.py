@@ -123,6 +123,7 @@ class TestDatabaseDirect(ClientHelper):
         params = omero.sys.ParametersI()
         params.addLong('gid', self.gid)
         r = self.conn.getQueryService().findAllByQuery(query_string, params)
+        self.assertIsNotNone(r)
         return r
 
     def countTags(self):
@@ -134,7 +135,7 @@ class TestDatabaseDirect(ClientHelper):
         ns, dbn = self.getNames()
         nsd, dbnd = self.getNames(self.fake_did)
         r = self.getGroupTags()
-        tn = 0 if r is None else len(r)
+        tn = len(r)
         tns = 0
         tnsd = 0
         for t in r:
@@ -167,6 +168,13 @@ class TestDatabaseDirect(ClientHelper):
         return iid, scale, px, ch, z, t, fids, feats, self.fake_ftset
 
 
+    def test_getCurrentGroupId(self):
+        self.assertEqual(pysliddb.getCurrentGroupId(self.conn), self.gid)
+        # This group ID should never actually be used in an OMERO API call
+        newGid = sys.maxsize
+        self.conn.SERVICE_OPTS.setOmeroGroup(newGid)
+        self.assertEqual(pysliddb.getCurrentGroupId(self.conn), newGid)
+
     def test_set_contentdb_path(self):
         tempdir = tempfile.mkdtemp(prefix='omero_searcher_content_db-')
         pysliddb.set_contentdb_path(tempdir)
@@ -183,7 +191,7 @@ class TestDatabaseDirect(ClientHelper):
 
         expectedns, expecteddbn = self.getNames()
         r = self.getGroupTags()
-        ntags0 = 0 if r is None else len(r)
+        ntags0 = len(r)
 
         # Non-dataset
         ns, dbname = pysliddb.initializeNameTag(self.conn, self.fake_ftset,
@@ -206,7 +214,7 @@ class TestDatabaseDirect(ClientHelper):
 
         expectedns, expecteddbn = self.getNames(self.fake_did)
         r = self.getGroupTags()
-        ntags0 = 0 if r is None else len(r)
+        ntags0 = len(r)
 
         ns, dbname = pysliddb.initializeNameTag(self.conn, self.fake_ftset,
                                                 did=self.fake_did)
