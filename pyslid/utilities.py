@@ -757,7 +757,7 @@ def link_file_to_image(conn, iid, filename, namespace=None, description=None, de
     # checking if image exist
     if debug:
         print "Checking if image " + str(iid) + " exists."
-    if not pyslid.utilities.hasImage( conn, iid ):
+    if not hasImage( conn, iid ):
         raise PyslidException("No image found with the given image id:%s", iid)
         return answer
     
