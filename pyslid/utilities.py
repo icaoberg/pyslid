@@ -30,7 +30,7 @@ import omero, pyslic
 import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
-
+from os.path import isfile
 
 class PyslidException(Exception):
     pass
@@ -569,7 +569,7 @@ def addDataset2Project( conn, did, prid ):
         raise PyslidException( "Unable to link dataset " + str(did) + " to project " + str(prid) )
         return answer
 	   
-def getListOfImages( conn, did ):
+def get_list_of_images( conn, did ):
     '''
     Returns the list of image ids (iids) from a given dataset id (did).
 
@@ -598,7 +598,7 @@ def getListOfImages( conn, did ):
         raise PyslidException( "Unable to retrieve list of image from dataset with dataset id:" + str(did) )
         return None 
 
-def getListOfProjects( conn ):
+def get_list_of_projects( conn ):
     '''
     Returns the list of project ids (prids) associated with the current user.
 
@@ -628,7 +628,7 @@ def getListOfProjects( conn ):
         raise PyslidException( "Unable to retrieve list of projects" )
         return [prids, names] 
 
-def getListOfDatasets( conn ):
+def get_list_of_datasets( conn ):
     '''
     Returns the list of dataset ids (dids) associated with the current user.
 
@@ -656,7 +656,7 @@ def getListOfDatasets( conn ):
         raise PyslidException( "Unable to retrieve list of datasets" )
         return [dids, names] 
 
-def getListOfAllImages( conn ):
+def get_list_of_all_images( conn ):
     '''
     Returns the list of all images ids (iids) associated with the current user.
 
@@ -683,7 +683,7 @@ def getListOfAllImages( conn ):
         raise PyslidException( "Unable to retrieve list of images" )
         return iids
 
-def hasDatasetWithName( conn, name ):
+def has_dataset_with_name( conn, name ):
     '''
     Determines if there is a dataset in the OMERO database with the 
     given name.
@@ -707,7 +707,7 @@ def hasDatasetWithName( conn, name ):
         print "Found more than one dataset with the matching name"
         return True
 
-def hasProjectWithName( conn, name ):
+def has_project_with_name( conn, name ):
     '''
     Determines if there is a project in the OMERO database with the 
     given name.
@@ -730,3 +730,55 @@ def hasProjectWithName( conn, name ):
     except:
         print "Found more than one project with the matching name"
         return True
+
+def link_file_to_image(conn, iid, filename, namespace=None, description=None, debug=False):
+    '''
+    Links local file to image.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param filename: 
+    :type filename: string
+    :param debug: debug flag
+    :type debug: boolean
+    :rtype: true if feature if it successfully added feature vector to feature table, false otherwise
+    '''
+    
+    #checking connection to omero.server
+    if debug:
+        print "Checking connection to OMERO.server."
+    answer = False
+    if not conn.isConnected():
+        print "Unable to connect to OMERO.server"
+        return answer
+
+    # checking if image exist
+    if debug:
+        print "Checking if image " + str(iid) + " exists."
+    if not pyslid.utilities.hasImage( conn, iid ):
+        raise PyslidException("No image found with the given image id:%s", iid)
+        return answer
+    
+    print "Image found. Attempting to retrieve image."
+    image = conn.getObject( "Image", long(iid) )
+    if image is None:
+        raise PyslidException("Unable to retrieve image with id:%s", iid)
+        return answer
+
+    #check filename
+    if debug:
+        print "Checking if file " + filename + " exists on local disk."
+    if not isfile(filename):
+        raise PyslidException("File " +  filename + " not found on disk")
+        return answer
+
+    file_annotation = conn.createFileAnnFromLocalFile(filename, ns=namespace, desc=description)
+
+    if debug:
+        print "Attaching FileAnnotation to Dataset: ", "File ID:", fileAnn.getId(), ",", file_annotation.getFile().getName(), "Size:", file_annotation.getFile().getSize()
+    image.linkAnnotation(file_annotation)
+
+    answer = True
+    return answer
