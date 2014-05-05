@@ -774,7 +774,7 @@ def link_file_to_image(conn, iid, filename, namespace=None, description=None, de
         raise PyslidException("File " +  filename + " not found on disk")
         return answer
 
-    file_annotation = conn.createFileAnnFromLocalFile(filename, ns=namespace, desc=description)
+    file_annotation = conn.createFileAnnfromLocalFile(filename, ns=namespace, desc=description)
 
     if debug:
         print "Attaching FileAnnotation to Dataset: ", "File ID:", fileAnn.getId(), ",", file_annotation.getFile().getName(), "Size:", file_annotation.getFile().getSize()
