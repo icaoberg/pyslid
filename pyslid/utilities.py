@@ -761,7 +761,8 @@ def link_file_to_image(conn, iid, filename, namespace=None, description=None, de
         raise PyslidException("No image found with the given image id:%s", iid)
         return answer
     
-    print "Image found. Attempting to retrieve image."
+    if debug:
+        print "Image found. Attempting to retrieve image."
     image = conn.getObject( "Image", long(iid) )
     if image is None:
         raise PyslidException("Unable to retrieve image with id:%s", iid)
