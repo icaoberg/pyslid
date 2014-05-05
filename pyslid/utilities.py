@@ -31,6 +31,7 @@ import omero.util.script_utils as utils
 from omero.rtypes import *
 from omero.gateway import BlitzGateway
 from os.path import isfile
+from warnings import warn as warning
 
 class PyslidException(Exception):
     pass
@@ -783,3 +784,54 @@ def link_file_to_image(conn, iid, filename, namespace=None, description=None, de
 
     answer = True
     return answer
+
+def does_image_have_file_annotation(conn, iid, filename, debug=False):
+    '''
+    Checks if image has a file annotation.
+
+    :param conn: connection
+    :type conn: BlitzGateway connection
+    :param iid: image id
+    :type iid: long
+    :param filename: annotation filename
+    :type filename: string
+    '''
+
+    #checking connection to omero.server
+    if debug:
+        print "Checking connection to OMERO.server."
+    answer = False
+    if not conn.isConnected():
+        print "Unable to connect to OMERO.server"
+        return answer
+
+    # checking if image exist
+    if debug:
+        print "Checking if image " + str(iid) + " exists."
+    if not hasImage( conn, iid ):
+        raise PyslidException("No image found with the given image id:%s", iid)
+        return answer
+    
+    if debug:
+        print "Image found. Attempting to retrieve image."
+    image = conn.getObject( "Image", long(iid) )
+    if image is None:
+        raise PyslidException("Unable to retrieve image with id:%s", iid)
+        return answer
+
+    if debug:
+        print "Checking annotations"
+    count = 0
+    for ann in image.listAnnotations():
+        if isinstance(ann, omero.gateway.FileAnnotationWrapper):
+            if ann.getFile().getName() == filename:
+                count = count + 1
+
+    if count > 1:
+        message = "More than one annotation has been found with the same name"
+        warning(message, UserWarning)
+
+    if count == 0:
+        return False
+    else:
+        return True
